@@ -7,14 +7,20 @@ from jsonrpclib import Server
 from views.management_view import ManagementView
 from models.node_model import NodeModel
 import utils.log as logger
+from utils.rpcserver import start_rpc_server
+import threading
 
 class ManagementController:
-    def __init__(self, root, display_controller):
+    def __init__(self, root, display_controller, endpoint_ipv4, endpoint_port):
         self.root = root
         self.display_controller = display_controller
+        self.endpoint_ipv4 = endpoint_ipv4
+        self.endpoint_port = endpoint_port
+        
         self.node_model = NodeModel()
         self.image_model = self.display_controller.image_model
         self.management_view = None
+        self.rpc_server_thread = None
 
     def toggle(self):
         if self.management_view:
@@ -117,3 +123,15 @@ class ManagementController:
                 if addr.family == socket.AF_INET:
                     interfaces.append(addr.address)
         return interfaces
+
+    def start_rpc_server(self):
+        if self.rpc_server_thread and self.rpc_server_thread.is_alive():
+            # If the server is already running, stop it first
+            self.stop_rpc_server()
+        self.rpc_server_thread = threading.Thread(target=start_rpc_server, args=(self, self.endpoint_ipv4, self.endpoint_port), daemon=True)
+        self.rpc_server_thread.start()
+
+    def stop_rpc_server(self):
+        if self.rpc_server_thread and self.rpc_server_thread.is_alive():
+            self.rpc_server_thread.join()
+            logger.log_action(f"Stopped RPC server on {self.endpoint_ipv4}:{self.endpoint_port}")

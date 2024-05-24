@@ -1,5 +1,6 @@
 import re
 import tkinter as tk
+from tkinter import ttk
 import os
 
 class ManagementView:
@@ -16,9 +17,13 @@ class ManagementView:
         self.main_frame = tk.Frame(self.management_win)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
+        # 创建Notebook小部件
+        self.notebook = ttk.Notebook(self.main_frame)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+
         # 管理节点部分
-        self.node_frame = tk.LabelFrame(self.main_frame, text="Manage Nodes", padx=10, pady=10)
-        self.node_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.node_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.node_frame, text="Manage Nodes")
 
         self.node_listbox = tk.Listbox(self.node_frame)
         self.node_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -36,8 +41,8 @@ class ManagementView:
         self.remove_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         # 上传图片部分
-        self.upload_frame = tk.LabelFrame(self.main_frame, text="Uploaded Image", padx=10, pady=10)
-        self.upload_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        self.upload_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.upload_frame, text="Uploaded Image")
 
         self.image_listbox = tk.Listbox(self.upload_frame)
         self.image_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -58,23 +63,36 @@ class ManagementView:
         self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         # 接口信息部分
-        self.interface_frame = tk.LabelFrame(self.main_frame, text="Interface Info (Double Click to Copy)", padx=10, pady=10)
-        self.interface_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.interface_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.interface_frame, text="Interface Info")
 
         self.interface_listbox = tk.Listbox(self.interface_frame)
         self.interface_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        # Populate interface listbox with dummy data for demonstration
         interfaces = self.controller.get_interfaces()
         for interface in interfaces:
             self.interface_listbox.insert(tk.END, interface)
 
+        # 服务器设置部分
+        self.server_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.server_frame, text="Server Settings")
+
+        self.server_ip_label = tk.Label(self.server_frame, text="Server IP")
+        self.server_ip_label.grid(row=0, column=0, sticky="ew")
+
+        self.server_ip_entry = tk.Entry(self.server_frame)
+        self.server_ip_entry.grid(row=0, column=1, sticky="ew")
+
+        self.server_port_label = tk.Label(self.server_frame, text="Server Port")
+        self.server_port_label.grid(row=1, column=0, sticky="ew")
+
+        self.server_port_entry = tk.Entry(self.server_frame)
+        self.server_port_entry.grid(row=1, column=1, sticky="ew")
+
+        self.update_server_button = tk.Button(self.server_frame, text="Update Server", command=self.update_server)
+        self.update_server_button.grid(row=2, column=0, columnspan=2, sticky="ew")
+
         # 配置网格布局
-        self.main_frame.grid_rowconfigure(0, weight=1)
-        self.main_frame.grid_rowconfigure(1, weight=1)
-        self.main_frame.grid_columnconfigure(0, weight=1)
-        self.main_frame.grid_columnconfigure(1, weight=1)
-        
         self.node_frame.grid_rowconfigure(0, weight=1)
         self.node_frame.grid_rowconfigure(1, weight=0)
         self.node_frame.grid_rowconfigure(2, weight=0)
@@ -92,6 +110,13 @@ class ManagementView:
         self.interface_frame.grid_rowconfigure(0, weight=1)
         self.interface_frame.grid_columnconfigure(0, weight=1)
         self.interface_frame.grid_columnconfigure(1, weight=1)
+
+        self.server_frame.grid_rowconfigure(0, weight=0)
+        self.server_frame.grid_rowconfigure(1, weight=0)
+        self.server_frame.grid_rowconfigure(2, weight=0)
+        self.server_frame.grid_columnconfigure(0, weight=1)
+        self.server_frame.grid_columnconfigure(1, weight=1)
+        
 
         # Bind double-click events
         self.node_listbox.bind("<Double-1>", self.on_node_double_click)
@@ -180,6 +205,18 @@ class ManagementView:
             self.root.clipboard_append(ip)
             self.root.update()  # now it stays on the clipboard
 
+    def update_server(self):
+        ip = self.server_ip_entry.get()
+        port = self.server_port_entry.get()
+        if ip and port:
+            try:
+                port = int(port)
+                self.controller.start_rpc_server(ip, port)
+            except ValueError:
+                tk.messagebox.showerror("Invalid Port", "Port must be a number.")
+        else:
+            tk.messagebox.showerror("Invalid Input", "IP and Port cannot be empty.")
+
     def schedule_status_updates(self):
-        self.update_node_listbox()
-        self.management_win.after(5000, self.schedule_status_updates)  # Update every 5 seconds
+            self.update_node_listbox()
+            self.management_win.after(5000, self.schedule_status_updates)  # Update every 5 seconds
