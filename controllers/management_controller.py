@@ -1,6 +1,5 @@
 import base64
 import os
-import tkinter as tk
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
 from views.management_view import ManagementView
@@ -70,6 +69,17 @@ class ManagementController:
     def remove_node(self, node_url):
         if self.node_model.remove_node(node_url):
             messagebox.showinfo("Node Removed", f"Node {node_url} removed successfully")
+
+    def ping(self, node_url):
+        try:
+            server = Server(node_url)
+            return server.ping()
+        except Exception as e:
+            logger.log_error(f"Error pinging {node_url}: {e}")
+            return False
+
+    def pong(self):
+        return True
 
     def distribute_image(self, filename):
         for peer in self.node_model.get_nodes():

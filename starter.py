@@ -29,6 +29,7 @@ if __name__ == "__main__":
     server = SimpleJSONRPCServer((endpoint_ipv4, endpoint_port))
     server.register_function(management_controller.add_image_base64, 'add_image_base64')
     server.register_function(management_controller.remove_image, 'remove_image')
+    server.register_function(management_controller.pong, 'pong')
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
     # 监听键盘输入切换管理UI
