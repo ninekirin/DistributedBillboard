@@ -1,4 +1,4 @@
-endpoint_ipv4: 0.0.0.0
+endpoint_ipv4: 0.0.0.0 # 0.0.0.0 for all interfaces
 endpoint_port: 8000
 fullscreen: false
 image_switch_interval: 5

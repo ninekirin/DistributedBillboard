@@ -1,6 +1,5 @@
 import re
 import tkinter as tk
-import webbrowser
 import os
 
 class ManagementView:
@@ -58,8 +57,21 @@ class ManagementView:
         self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
         self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
+        # 接口信息部分
+        self.interface_frame = tk.LabelFrame(self.main_frame, text="Interface Info (Double Click to Copy)", padx=10, pady=10)
+        self.interface_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        self.interface_listbox = tk.Listbox(self.interface_frame)
+        self.interface_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+        # Populate interface listbox with dummy data for demonstration
+        interfaces = self.controller.get_interfaces()
+        for interface in interfaces:
+            self.interface_listbox.insert(tk.END, interface)
+
         # 配置网格布局
         self.main_frame.grid_rowconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=1)
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_columnconfigure(1, weight=1)
         
@@ -77,9 +89,14 @@ class ManagementView:
         self.upload_frame.grid_columnconfigure(0, weight=1)
         self.upload_frame.grid_columnconfigure(1, weight=1)
 
+        self.interface_frame.grid_rowconfigure(0, weight=1)
+        self.interface_frame.grid_columnconfigure(0, weight=1)
+        self.interface_frame.grid_columnconfigure(1, weight=1)
+
         # Bind double-click events
         self.node_listbox.bind("<Double-1>", self.on_node_double_click)
         self.image_listbox.bind("<Double-1>", self.on_image_double_click)
+        self.interface_listbox.bind("<Double-1>", self.on_interface_double_click)
 
         # Schedule regular updates for node statuses
         self.schedule_status_updates()
@@ -153,6 +170,15 @@ class ManagementView:
                 os.system(f'open "{filename}"')
             elif os.name == 'nt':  # for Windows
                 os.startfile(filename)
+
+    def on_interface_double_click(self, event):
+        selected = self.interface_listbox.curselection()
+        if selected:
+            interface_info = self.interface_listbox.get(selected)
+            ip = interface_info.split(':')[0]
+            self.root.clipboard_clear()
+            self.root.clipboard_append(ip)
+            self.root.update()  # now it stays on the clipboard
 
     def schedule_status_updates(self):
         self.update_node_listbox()

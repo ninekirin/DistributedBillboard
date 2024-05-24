@@ -2,7 +2,7 @@ import os
 import base64
 from urllib.request import urlretrieve
 from PIL import Image
-import models.log_model as logger
+import utils.log as logger
 
 class ImageModel:
     def __init__(self):
@@ -24,6 +24,9 @@ class ImageModel:
                 Image.open(os.path.join(self.image_cache_dir, path)).verify()
             except Exception as e:
                 os.remove(os.path.join(self.image_cache_dir, path))
+                # Remove from list
+                path_list.remove(path)
+                logger.log_action(f"Removed invalid image {path}")
 
         # Sort images by modification time
         path_list.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_cache_dir, x)))

@@ -1,10 +1,12 @@
 import base64
 import os
+import socket
+import psutil
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
 from views.management_view import ManagementView
 from models.node_model import NodeModel
-import models.log_model as logger
+import utils.log as logger
 
 class ManagementController:
     def __init__(self, root, display_controller):
@@ -107,3 +109,11 @@ class ManagementController:
                 logger.log_action(f"Distributed remove image {url} to {peer}")
             except Exception as e:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")
+
+    def get_interfaces(self):
+        interfaces = []
+        for interface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                if addr.family == socket.AF_INET:
+                    interfaces.append(addr.address)
+        return interfaces

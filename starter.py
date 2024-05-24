@@ -3,7 +3,7 @@ import tkinter as tk
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 from controllers.management_controller import ManagementController
 from controllers.display_controller import DisplayController
-from models.config_model import load_config
+from utils.config import load_config
 
 config = load_config()
 endpoint_ipv4 = config.get('endpoint_ipv4', '0.0.0.0')
@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # Create a root window
     root = tk.Tk()
-    root.geometry("600x400")
+    root.geometry("600x600")
     root.title(f"Billboard - http://{endpoint_ipv4}:{endpoint_port}")
     if fullscreen:
         root.attributes('-fullscreen', True)
