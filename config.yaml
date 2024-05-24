@@ -1,6 +1,8 @@
 endpoint_ipv4: 0.0.0.0
 endpoint_port: 8000
+fullscreen: false
 image_switch_interval: 5
+background_color: 'skyblue' # hex color or color name
 nodes:
 - http://localhost:8001
 - http://localhost:8002

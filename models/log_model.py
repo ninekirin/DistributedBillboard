@@ -1,8 +1,8 @@
 import logging
 
-# 日志系统设置
+# Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-# filename='billboard.log', 
+
 def log_action(action):
     logging.info(action)
 

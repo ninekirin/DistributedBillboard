@@ -16,8 +16,21 @@ class ImageModel:
         if not os.path.exists(self.image_cache_dir):
             os.makedirs(self.image_cache_dir)
 
-        # Load images from image_cache_dir
-        for filename in os.listdir(self.image_cache_dir):
+        path_list = os.listdir(self.image_cache_dir)
+
+        # Remove invalid images
+        path_list.remove('.DS_Store')
+        for path in path_list:
+            try:
+                Image.open(os.path.join(self.image_cache_dir, path)).verify()
+            except Exception as e:
+                os.remove(os.path.join(self.image_cache_dir, path))
+
+        # Sort images by modification time
+        path_list.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_cache_dir, x)))
+
+        # Load images from cache
+        for filename in path_list:
             if filename.lower().endswith((".jpg", ".jpeg", ".png")):
                 self.image_list.append(os.path.join(self.image_cache_dir, filename))
 
