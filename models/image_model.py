@@ -19,7 +19,6 @@ class ImageModel:
         path_list = os.listdir(self.image_cache_dir)
 
         # Remove invalid images
-        path_list.remove('.DS_Store')
         for path in path_list:
             try:
                 Image.open(os.path.join(self.image_cache_dir, path)).verify()
