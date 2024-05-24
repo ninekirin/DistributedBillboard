@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 
 class ManagementView:
@@ -20,9 +21,6 @@ class ManagementView:
 
         self.node_listbox = tk.Listbox(self.node_frame)
         self.node_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
-
-        for node in self.controller.node_model.get_nodes():
-            self.node_listbox.insert(tk.END, node)
 
         self.node_entry_label = tk.Label(self.node_frame, text="Node URL")
         self.node_entry_label.grid(row=1, column=0, sticky="ew")
@@ -77,19 +75,24 @@ class ManagementView:
         self.upload_frame.grid_columnconfigure(0, weight=1)
         self.upload_frame.grid_columnconfigure(1, weight=1)
 
+        # Schedule regular updates for node statuses
+        self.schedule_status_updates()
+
     def add_node(self):
         node_url = self.node_entry.get()
-        if node_url:
+        regex = r"^(http|https)://[a-zA-Z0-9.-]+(:[0-9]+)?/?$"
+        if re.match(regex, node_url):
             self.controller.add_node(node_url)
-            self.node_listbox.insert(tk.END, node_url)
+            self.update_node_listbox()
             self.node_entry.delete(0, tk.END)
 
     def remove_node(self):
         selected = self.node_listbox.curselection()
         if selected:
-            node_url = self.node_listbox.get(selected)
+            node_info = self.node_listbox.get(selected)
+            node_url = node_info.split(' - ')[0]
             self.controller.remove_node(node_url)
-            self.node_listbox.delete(selected)
+            self.update_node_listbox()
 
     def upload_image(self):
         url = self.image_entry.get()
@@ -118,3 +121,17 @@ class ManagementView:
     def node_listbox_remove_item(self, item):
         index = self.node_listbox.get(0, tk.END).index(item)
         self.node_listbox.delete(index)
+
+    def update_node_listbox(self):
+        # get selected index
+        selected = self.node_listbox.curselection()
+        self.node_listbox.delete(0, tk.END)
+        for node, status in self.controller.get_nodes_with_status():
+            status_text = "Online" if status else "Offline"
+            self.node_listbox.insert(tk.END, f"{node} - {status_text}")
+        if selected:
+            self.node_listbox.selection_set(selected)
+
+    def schedule_status_updates(self):
+        self.update_node_listbox()
+        self.management_win.after(5000, self.schedule_status_updates)  # Update every 5 seconds

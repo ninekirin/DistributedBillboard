@@ -26,7 +26,7 @@ if __name__ == "__main__":
     management_controller = ManagementController(root, display_controller)
 
     # 启动服务器线程
-    server = SimpleJSONRPCServer((endpoint_ipv4, endpoint_port))
+    server = SimpleJSONRPCServer((endpoint_ipv4, endpoint_port),logRequests=False)
     server.register_function(management_controller.add_image_base64, 'add_image_base64')
     server.register_function(management_controller.remove_image, 'remove_image')
     server.register_function(management_controller.pong, 'pong')

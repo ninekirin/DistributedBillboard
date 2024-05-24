@@ -1,6 +1,7 @@
 import logging
 from models.config_model import load_config, save_config
-from models.log_model import log_action
+import models.log_model as logger
+from jsonrpclib import Server
 
 config = load_config()
 
@@ -13,11 +14,14 @@ class NodeModel:
         return self.peer_nodes
 
     def add_node(self, node_url):
+        print(self.peer_nodes)
+        if not self.peer_nodes:
+            self.peer_nodes = []
         if node_url and node_url not in self.peer_nodes:
             self.peer_nodes.append(node_url)
             config['nodes'] = self.peer_nodes
             save_config(config)
-            log_action(f"Added node {node_url}")
+            logger.log_action(f"Added node {node_url}")
             return True
         return False
 
@@ -26,6 +30,15 @@ class NodeModel:
             self.peer_nodes.remove(node_url)
             config['nodes'] = self.peer_nodes
             save_config(config)
-            log_action(f"Removed node {node_url}")
+            logger.log_action(f"Removed node {node_url}")
             return True
         return False
+    
+    def is_node_online(self, node_url):
+        try:
+            server = Server(node_url)
+            return server.pong() == 'pong'
+        except Exception as e:
+            logger.log_error(f"Error pinging {node_url}: {e}")
+            return False
+

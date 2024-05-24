@@ -63,44 +63,48 @@ class ManagementController:
             self.distribute_remove_image(url)
 
     def add_node(self, node_url):
-        if self.node_model.add_node(node_url):
-            messagebox.showinfo("Node Added", f"Node {node_url} added successfully")
+        self.node_model.add_node(node_url)
 
     def remove_node(self, node_url):
-        if self.node_model.remove_node(node_url):
-            messagebox.showinfo("Node Removed", f"Node {node_url} removed successfully")
+        self.node_model.remove_node(node_url)
+
+    def get_nodes_with_status(self):
+        nodes = self.node_model.get_nodes()
+        nodes_status = []
+        for node in nodes:
+            online_status = self.node_model.is_node_online(node)
+            nodes_status.append((node, online_status))
+        return nodes_status
 
     def ping(self, node_url):
         try:
             server = Server(node_url)
-            return server.ping()
+            return server.pong()
         except Exception as e:
             logger.log_error(f"Error pinging {node_url}: {e}")
             return False
 
     def pong(self):
-        return True
+        return 'pong'
 
     def distribute_image(self, filename):
-        for peer in self.node_model.get_nodes():
+        nodes = self.node_model.get_nodes()
+        for peer in nodes:
             try:
-                server = Server(peer)
+                node = Server(peer)
                 with open(filename, "rb") as f:
                     base64data = base64.b64encode(f.read()).decode('utf-8')
-                server.add_image_base64(os.path.basename(filename), base64data)
+                node.add_image_base64(os.path.basename(filename), base64data)
                 logger.log_action(f"Distributed image {filename} to {peer}")
-                return True
             except Exception as e:
                 logger.log_error(f"Error distributing to {peer}: {e}")
-        return False
     
     def distribute_remove_image(self, url):
-        for peer in self.node_model.get_nodes():
+        nodes = self.node_model.get_nodes()
+        for peer in nodes:
             try:
-                server = Server(peer)
-                server.remove_image(url, False)
+                node = Server(peer)
+                node.remove_image(url, False)
                 logger.log_action(f"Distributed remove image {url} to {peer}")
-                return True
             except Exception as e:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")
-        return False
