@@ -7,6 +7,9 @@ class ManagementView:
         self.management_win = tk.Toplevel(self.root)
         self.management_win.title("Manage Billboard")
 
+        # Bind 'Escape' key to destroy management view
+        self.management_win.bind("<Escape>", lambda e: self.management_win.destroy())
+
         # 主框架
         self.main_frame = tk.Frame(self.management_win)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
