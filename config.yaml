@@ -4,3 +4,5 @@ image_switch_interval: 5
 nodes:
 - http://localhost:8001
 - http://localhost:8002
+- http://localhost:8003
+- http://localhost:8004

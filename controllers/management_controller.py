@@ -51,7 +51,6 @@ class ManagementController:
                 filename = self.add_image(local_url)
                 self.distribute_image(filename)
                 return filename
-        messagebox.showerror("Invalid Image", "The image you provided is invalid")
         return None
 
     def remove_image(self, url, distribution=True):

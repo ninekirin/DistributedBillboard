@@ -6,7 +6,10 @@ import models.log_model as logger
 
 class ImageModel:
     def __init__(self):
-        self.image_cache_dir = "./cache"
+        if os.name == "nt":
+            self.image_cache_dir = ".\\images"
+        else:
+            self.image_cache_dir = "./images"
         self.image_list = []
         self.current_image_index = 0
 

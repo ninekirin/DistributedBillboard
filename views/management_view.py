@@ -1,5 +1,7 @@
 import re
 import tkinter as tk
+import webbrowser
+import os
 
 class ManagementView:
     def __init__(self, root, controller):
@@ -75,6 +77,10 @@ class ManagementView:
         self.upload_frame.grid_columnconfigure(0, weight=1)
         self.upload_frame.grid_columnconfigure(1, weight=1)
 
+        # Bind double-click events
+        self.node_listbox.bind("<Double-1>", self.on_node_double_click)
+        self.image_listbox.bind("<Double-1>", self.on_image_double_click)
+
         # Schedule regular updates for node statuses
         self.schedule_status_updates()
 
@@ -106,7 +112,6 @@ class ManagementView:
         if selected:
             url = self.image_listbox.get(selected)
             self.controller.remove_image(url)
-            self.image_listbox.delete(selected)
 
     def image_listbox_add_item(self, item):
         self.image_listbox.insert(tk.END, item)
@@ -131,6 +136,23 @@ class ManagementView:
             self.node_listbox.insert(tk.END, f"{node} - {status_text}")
         if selected:
             self.node_listbox.selection_set(selected)
+
+    def on_node_double_click(self, event):
+        selected = self.node_listbox.curselection()
+        if selected:
+            node_info = self.node_listbox.get(selected)
+            node_url = node_info.split(' - ')[0]
+            self.node_entry.delete(0, tk.END)
+            self.node_entry.insert(0, node_url)
+
+    def on_image_double_click(self, event):
+        selected = self.image_listbox.curselection()
+        if selected:
+            filename = self.image_listbox.get(selected)
+            if os.name == 'posix':  # for macOS or Linux
+                os.system(f'open "{filename}"')
+            elif os.name == 'nt':  # for Windows
+                os.startfile(filename)
 
     def schedule_status_updates(self):
         self.update_node_listbox()
