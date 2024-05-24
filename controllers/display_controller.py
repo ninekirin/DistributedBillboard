@@ -3,11 +3,10 @@ import time
 import tkinter as tk
 from PIL import Image, ImageTk
 from models.image_model import ImageModel
-from utils.config import load_config
 import utils.log as logger
 
 class DisplayController:
-    def __init__(self, root):
+    def __init__(self, root, background_color='black', image_switch_interval=5):
         self.root = root
         self.label = tk.Label(root)
 
@@ -15,11 +14,11 @@ class DisplayController:
         self.label.pack(fill=tk.BOTH, expand=True)
 
         # Set label background color
-        self.label.configure(background=load_config().get('background_color', 'black'))
+        self.label.configure(background=background_color)
 
         self.image_model = ImageModel()
-        self.image_switch_interval = load_config().get('image_switch_interval', 5)
-        self.resize_delay = 50  # resize delay in ms
+        self.image_switch_interval = image_switch_interval
+        self.resize_delay = 200  # resize delay in ms
         self.resize_after_id = None
 
         # Start a thread to show images

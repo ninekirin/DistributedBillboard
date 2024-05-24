@@ -7,7 +7,7 @@ config_file = "config.yaml"
 def load_config():
     if not os.path.exists(config_file):
         with open(config_file, 'w') as f:
-            yaml.dump({"endpoint_ipv4": "0.0.0.0", 
+            yaml.dump({"endpoint_ipaddr": "0.0.0.0", 
                        "endpoint_port": 8000, 
                        "fullscreen": False,
                        "image_switch_interval": 5, 

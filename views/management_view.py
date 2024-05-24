@@ -23,7 +23,7 @@ class ManagementView:
 
         # 管理节点部分
         self.node_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.node_frame, text="Manage Nodes")
+        self.notebook.add(self.node_frame, text="Nodes")
 
         self.node_listbox = tk.Listbox(self.node_frame)
         self.node_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -42,7 +42,7 @@ class ManagementView:
 
         # 上传图片部分
         self.upload_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.upload_frame, text="Uploaded Image")
+        self.notebook.add(self.upload_frame, text="Images")
 
         self.image_listbox = tk.Listbox(self.upload_frame)
         self.image_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -62,35 +62,33 @@ class ManagementView:
         self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
         self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
-        # 接口信息部分
-        self.interface_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.interface_frame, text="Interface Info")
+        # 合并接口信息和服务器设置部分
+        self.interface_server_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.interface_server_frame, text="Interface & Server")
 
-        self.interface_listbox = tk.Listbox(self.interface_frame)
+        self.interface_listbox = tk.Listbox(self.interface_server_frame)
         self.interface_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
         interfaces = self.controller.get_interfaces()
         for interface in interfaces:
             self.interface_listbox.insert(tk.END, interface)
 
-        # 服务器设置部分
-        self.server_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.server_frame, text="Server Settings")
+        self.server_ip_label = tk.Label(self.interface_server_frame, text="Server IP Address")
+        self.server_ip_label.grid(row=1, column=0, sticky="ew")
 
-        self.server_ip_label = tk.Label(self.server_frame, text="Server IP")
-        self.server_ip_label.grid(row=0, column=0, sticky="ew")
+        self.server_ip_entry = tk.Entry(self.interface_server_frame)
+        self.server_ip_entry.grid(row=1, column=1, sticky="ew")
+        self.server_ip_entry.insert(0, self.controller.addrport_model.endpoint_ipaddr)
 
-        self.server_ip_entry = tk.Entry(self.server_frame)
-        self.server_ip_entry.grid(row=0, column=1, sticky="ew")
+        self.server_port_label = tk.Label(self.interface_server_frame, text="Server Port")
+        self.server_port_label.grid(row=2, column=0, sticky="ew")
 
-        self.server_port_label = tk.Label(self.server_frame, text="Server Port")
-        self.server_port_label.grid(row=1, column=0, sticky="ew")
+        self.server_port_entry = tk.Entry(self.interface_server_frame)
+        self.server_port_entry.grid(row=2, column=1, sticky="ew")
+        self.server_port_entry.insert(0, self.controller.addrport_model.endpoint_port)
 
-        self.server_port_entry = tk.Entry(self.server_frame)
-        self.server_port_entry.grid(row=1, column=1, sticky="ew")
-
-        self.update_server_button = tk.Button(self.server_frame, text="Update Server", command=self.update_server)
-        self.update_server_button.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.update_server_button = tk.Button(self.interface_server_frame, text="Update Server", command=self.update_server)
+        self.update_server_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         # 配置网格布局
         self.node_frame.grid_rowconfigure(0, weight=1)
@@ -107,21 +105,18 @@ class ManagementView:
         self.upload_frame.grid_columnconfigure(0, weight=1)
         self.upload_frame.grid_columnconfigure(1, weight=1)
 
-        self.interface_frame.grid_rowconfigure(0, weight=1)
-        self.interface_frame.grid_columnconfigure(0, weight=1)
-        self.interface_frame.grid_columnconfigure(1, weight=1)
-
-        self.server_frame.grid_rowconfigure(0, weight=0)
-        self.server_frame.grid_rowconfigure(1, weight=0)
-        self.server_frame.grid_rowconfigure(2, weight=0)
-        self.server_frame.grid_columnconfigure(0, weight=1)
-        self.server_frame.grid_columnconfigure(1, weight=1)
-        
+        self.interface_server_frame.grid_rowconfigure(0, weight=1)
+        self.interface_server_frame.grid_rowconfigure(1, weight=0)
+        self.interface_server_frame.grid_rowconfigure(2, weight=0)
+        self.interface_server_frame.grid_rowconfigure(3, weight=0)
+        self.interface_server_frame.grid_columnconfigure(0, weight=1)
+        self.interface_server_frame.grid_columnconfigure(1, weight=1)
 
         # Bind double-click events
         self.node_listbox.bind("<Double-1>", self.on_node_double_click)
         self.image_listbox.bind("<Double-1>", self.on_image_double_click)
-        self.interface_listbox.bind("<Double-1>", self.on_interface_double_click)
+        # Bind click event for interface listbox
+        self.interface_listbox.bind("<<ListboxSelect>>", self.on_interface_click)
 
         # Schedule regular updates for node statuses
         self.schedule_status_updates()
@@ -196,14 +191,16 @@ class ManagementView:
             elif os.name == 'nt':  # for Windows
                 os.startfile(filename)
 
-    def on_interface_double_click(self, event):
+    def on_interface_click(self, event):
         selected = self.interface_listbox.curselection()
         if selected:
             interface_info = self.interface_listbox.get(selected)
-            ip = interface_info.split(':')[0]
+            ip = interface_info
             self.root.clipboard_clear()
             self.root.clipboard_append(ip)
             self.root.update()  # now it stays on the clipboard
+            self.server_ip_entry.delete(0, tk.END)
+            self.server_ip_entry.insert(0, ip)
 
     def update_server(self):
         ip = self.server_ip_entry.get()
@@ -211,7 +208,7 @@ class ManagementView:
         if ip and port:
             try:
                 port = int(port)
-                self.controller.start_rpc_server(ip, port)
+                self.controller.update_server(ip, port)
             except ValueError:
                 tk.messagebox.showerror("Invalid Port", "Port must be a number.")
         else:

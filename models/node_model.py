@@ -1,4 +1,3 @@
-import logging
 from utils.config import load_config, save_config
 import utils.log as logger
 from jsonrpclib import Server
