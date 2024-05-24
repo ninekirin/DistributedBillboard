@@ -85,7 +85,7 @@ class ImageModel:
         for peer in peer_nodes:
             try:
                 server = Server(peer)
-                server.remove_image(os.path.basename(url), False)
+                server.remove_image(url, False)
                 log_action(f"Distributed remove image {url} to {peer}")
             except Exception as e:
                 log_action(f"Error distributing remove to {peer}: {e}")

@@ -108,7 +108,6 @@ class ManagementView:
     def image_listbox_remove_item(self, item):
         index = self.image_listbox.get(0, tk.END).index(item)
         self.image_listbox.delete(index)
-        print(item, index)
 
     def node_listbox_add_item(self, item):
         self.node_listbox.insert(tk.END, item)
