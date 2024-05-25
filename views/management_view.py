@@ -3,11 +3,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import os
-from utils.config import load_config, save_config
-
-config = load_config()
-
-ping_interval = config.get('ping_interval', 15) * 1000
+from utils.config import get_config, update_config
 
 class ManagementView:
     def __init__(self, root, controller):
@@ -99,6 +95,47 @@ class ManagementView:
         self.update_server_button = tk.Button(self.interface_server_frame, text="Update Server", command=self.update_server)
         self.update_server_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
+        # Other settings part
+        self.other_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.other_frame, text="Other")
+        """
+        fullscreen: false
+        background_color: skyblue
+        image_switch_interval: 15
+        ping_interval: 15
+        ping_timeout: 1
+        """
+        self.fullscreen_var = tk.BooleanVar()
+        self.fullscreen_check = tk.Checkbutton(self.other_frame, text="Fullscreen", variable=self.fullscreen_var)
+        self.fullscreen_check.grid(row=0, column=0, sticky="ew")
+
+        self.bg_color_label = tk.Label(self.other_frame, text="Background Color")
+        self.bg_color_label.grid(row=1, column=0, sticky="ew")
+
+        self.bg_color_entry = tk.Entry(self.other_frame)
+        self.bg_color_entry.grid(row=1, column=1, sticky="ew")
+
+        self.img_switch_interval_label = tk.Label(self.other_frame, text="Image Switch Interval (s)")
+        self.img_switch_interval_label.grid(row=2, column=0, sticky="ew")
+
+        self.img_switch_interval_entry = tk.Entry(self.other_frame)
+        self.img_switch_interval_entry.grid(row=2, column=1, sticky="ew")
+
+        self.ping_interval_label = tk.Label(self.other_frame, text="Ping Interval (s)")
+        self.ping_interval_label.grid(row=3, column=0, sticky="ew")
+
+        self.ping_interval_entry = tk.Entry(self.other_frame)
+        self.ping_interval_entry.grid(row=3, column=1, sticky="ew")
+
+        self.ping_timeout_label = tk.Label(self.other_frame, text="Ping Timeout (s)")
+        self.ping_timeout_label.grid(row=4, column=0, sticky="ew")
+
+        self.ping_timeout_entry = tk.Entry(self.other_frame)
+        self.ping_timeout_entry.grid(row=4, column=1, sticky="ew")
+
+        self.save_button = tk.Button(self.other_frame, text="Save Settings", command=self.save_settings)
+        self.save_button.grid(row=5, column=0, columnspan=2, sticky="ew")
+
         # Grid configuration
         self.node_frame.grid_rowconfigure(0, weight=1)
         self.node_frame.grid_rowconfigure(1, weight=0)
@@ -129,6 +166,9 @@ class ManagementView:
 
         # Schedule regular updates for node statuses
         self.schedule_status_updates()
+
+        # Load settings
+        self.load_settings()
 
     def add_node(self):
         node_url = self.node_entry.get()
@@ -234,4 +274,27 @@ class ManagementView:
 
     def schedule_status_updates(self):
         threading.Thread(target=self.update_node_listbox).start()
-        self.management_win.after(ping_interval, self.schedule_status_updates)  # Update every 5 seconds
+        ping_interval = self.controller.ping_interval
+        self.management_win.after(ping_interval * 1000, self.schedule_status_updates)
+
+    def load_settings(self):
+        settings = self.controller.load_settings()
+        self.fullscreen_var.set(settings['fullscreen'])
+        self.bg_color_entry.insert(0, settings['background_color'])
+        self.img_switch_interval_entry.insert(0, settings['image_switch_interval'])
+        self.ping_interval_entry.insert(0, settings['ping_interval'])
+        self.ping_timeout_entry.insert(0, settings['ping_timeout'])
+
+    def save_settings(self):
+        # Validate input (ping_interval and ping_timeout must be greater than 0)
+        if int(self.ping_interval_entry.get()) <= 0 or int(self.ping_timeout_entry.get()) <= 0 or int(self.img_switch_interval_entry.get()) <= 0:
+            tk.messagebox.showerror("Invalid Input", "Values must be greater than 0.")
+            return
+        settings = {
+            'fullscreen': self.fullscreen_var.get(),
+            'background_color': self.bg_color_entry.get(),
+            'image_switch_interval': int(self.img_switch_interval_entry.get()),
+            'ping_interval': int(self.ping_interval_entry.get()),
+            'ping_timeout': int(self.ping_timeout_entry.get())
+        }
+        self.controller.save_settings(settings)

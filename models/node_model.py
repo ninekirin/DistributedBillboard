@@ -1,16 +1,16 @@
-from utils.config import load_config, save_config
+from utils.config import update_config
 import utils.log as logger
 from jsonrpclib import Server
 import socket
 
-config = load_config()
-
-ping_timeout = config.get('ping_timeout', 1)
-
 class NodeModel:
 
-    def __init__(self):
-        self.peer_nodes = config.get('nodes', [])
+    def __init__(self, nodes=None, ping_timeout=1):
+        self.peer_nodes = nodes
+        self.ping_timeout = ping_timeout
+
+    def set_ping_timeout(self, timeout):
+        self.ping_timeout = timeout
 
     def get_nodes(self):
         return self.peer_nodes
@@ -26,8 +26,7 @@ class NodeModel:
                 logger.log_error(f"Failed to add node {node_url}: Node is offline")
                 return False
             self.peer_nodes.append(node_url)
-            config['nodes'] = self.peer_nodes
-            save_config(config)
+            update_config('nodes', self.peer_nodes)
             logger.log_action(f"Added node {node_url}")
             return True
         logger.log_error(f"Failed to add node {node_url}: Node already exists")
@@ -36,8 +35,7 @@ class NodeModel:
     def remove_node(self, node_url):
         if node_url in self.peer_nodes:
             self.peer_nodes.remove(node_url)
-            config['nodes'] = self.peer_nodes
-            save_config(config)
+            update_config('nodes', self.peer_nodes)
             logger.log_action(f"Removed node {node_url}")
             return True
         return False
@@ -47,7 +45,7 @@ class NodeModel:
             # WinSock will stuck there if the node is offline
             # so we need to set a timeout and use threading
             server = Server(node_url)
-            socket.setdefaulttimeout(ping_timeout)
+            socket.setdefaulttimeout(self.ping_timeout)
             pong = server.pong()
             socket.setdefaulttimeout(None)
             return pong == 'pong'

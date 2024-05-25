@@ -32,6 +32,12 @@ class DisplayController:
         # Mouse click to show next image
         self.root.bind('<Button-1>', lambda e: self.display_image(self.image_model.get_next_image()))
 
+    def set_background_color(self, color):
+        self.label.configure(background=color)
+
+    def set_image_switch_interval(self, interval):
+        self.image_switch_interval = interval
+
     def on_resize(self, event):
         if self.resize_after_id:
             self.root.after_cancel(self.resize_after_id)

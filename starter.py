@@ -1,14 +1,13 @@
 import tkinter as tk
 from controllers.management_controller import ManagementController
 from controllers.display_controller import DisplayController
-from utils.config import load_config
+from utils.config import get_config
 
-config = load_config()
-endpoint_ipaddr = config.get('endpoint_ipaddr', '0.0.0.0')
-endpoint_port = config.get('endpoint_port', 8000)
-fullscreen = config.get('fullscreen', False)
-image_switch_interval = config.get('image_switch_interval', 5)
-background_color = config.get('background_color', 'black')
+endpoint_ipaddr = get_config('endpoint_ipaddr', '0.0.0.0')
+endpoint_port = get_config('endpoint_port', 8000)
+fullscreen = get_config('fullscreen', False)
+image_switch_interval = get_config('image_switch_interval', 5)
+background_color = get_config('background_color', 'black')
 
 if __name__ == "__main__":
 

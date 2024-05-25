@@ -7,6 +7,7 @@ from threading import Lock
 import concurrent.futures
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
+from utils.config import get_config, update_config
 from views.management_view import ManagementView
 from models.node_model import NodeModel
 from models.addrport_model import AddrPortModel
@@ -19,13 +20,14 @@ class ManagementController:
         self.root = root
         self.display_controller = display_controller
         
-        self.node_model = NodeModel()
+        self.node_model = NodeModel(get_config('nodes', []), get_config('ping_timeout', 1))
         self.image_model = self.display_controller.image_model
         self.addrport_model = AddrPortModel(endpoint_ipaddr, endpoint_port)
         self.management_view = None
         self.rpc_server = None
         self.rpc_server_thread = None
         self.rpc_server_lock = Lock()
+        self.ping_interval = get_config('ping_interval', 15)
 
     def toggle(self):
         if self.management_view:
@@ -186,3 +188,36 @@ class ManagementController:
                 else:
                     self.rpc_server = None
                     logger.log_action(f"Stopped RPC server on {self.addrport_model.endpoint_ipaddr}:{self.addrport_model.endpoint_port}")
+
+    def load_settings(self):
+        return {
+            'fullscreen': get_config('fullscreen', False),
+            'background_color': get_config('background_color', 'skyblue'),
+            'image_switch_interval': get_config('image_switch_interval', 15),
+            'ping_interval': get_config('ping_interval', 15),
+            'ping_timeout': get_config('ping_timeout', 1)
+        }
+
+    def save_settings(self, settings):
+        """
+        fullscreen: false
+        background_color: skyblue
+        image_switch_interval: 15
+        ping_interval: 15
+        ping_timeout: 1
+        """
+        update_config('fullscreen', settings['fullscreen'])
+        update_config('background_color', settings['background_color'])
+        update_config('image_switch_interval', settings['image_switch_interval'])
+        update_config('ping_interval', settings['ping_interval'])
+        update_config('ping_timeout', settings['ping_timeout'])
+        # Set fullscreen
+        self.root.attributes('-fullscreen', settings['fullscreen'])
+        # Set display_controller settings
+        self.display_controller.set_background_color(settings['background_color'])
+        self.display_controller.set_image_switch_interval(settings['image_switch_interval'])
+        # Set ping_interval
+        self.ping_interval = settings['ping_interval']
+        # Set ping_timeout
+        self.node_model.set_ping_timeout(settings['ping_timeout'])
+        logger.log_action("Settings saved")
