@@ -61,8 +61,11 @@ class ManagementController:
                 return filename
         else:
             file_path = filedialog.askopenfilename()
+            url_prefix = "file://"
             if file_path:
-                local_url = f"file:///{file_path}"
+                if os.name == "nt": # Windows
+                    url_prefix = "file:///"
+                local_url = f"{url_prefix}{file_path}"
                 filename = self.add_image(local_url)
                 self.distribute_image(filename)
                 return filename
