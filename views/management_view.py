@@ -53,11 +53,14 @@ class ManagementView:
         self.image_entry_label = tk.Label(self.upload_frame, text="Image URL")
         self.image_entry_label.grid(row=1, column=0, sticky="ew")
 
-        self.image_entry = tk.Entry(self.upload_frame)
+        self.image_var = tk.StringVar()
+        self.image_entry = tk.Entry(self.upload_frame, textvariable=self.image_var)
         self.image_entry.grid(row=1, column=1, sticky="ew")
+        self.image_var.trace_add("write", lambda name, index, mode: self.update_upload_button_text())
 
-        self.upload_img_button = tk.Button(self.upload_frame, text="Upload Image", command=self.upload_image)
+        self.upload_img_button = tk.Button(self.upload_frame, text="Select Image From Filesystem", command=self.upload_image)
         self.upload_img_button.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.update_upload_button_text()
 
         self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
         self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
@@ -163,6 +166,12 @@ class ManagementView:
     def node_listbox_remove_item(self, item):
         index = self.node_listbox.get(0, tk.END).index(item)
         self.node_listbox.delete(index)
+
+    def update_upload_button_text(self):
+        if self.image_entry.get().startswith(('http://', 'https://')):
+            self.upload_img_button.config(text="Download Image From Remote")
+        else:
+            self.upload_img_button.config(text="Select Image From Filesystem")
 
     def update_node_listbox(self):
         # get selected index

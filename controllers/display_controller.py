@@ -1,6 +1,7 @@
 import threading
 import time
 import tkinter as tk
+import os
 from PIL import Image, ImageTk
 import pillow_avif
 from models.image_model import ImageModel
@@ -63,6 +64,12 @@ class DisplayController:
         while True:
             image_path = self.image_model.get_next_image()
             if image_path:
+                # Check if image is exist
+                if not os.path.exists(image_path):
+                    logger.log_action(f"Image {image_path} not found, skipping")
+                    # Remove image from list
+                    self.image_model.remove_image(image_path, distribution=False)
+                    continue
                 self.display_image(image_path)
             logger.log_action(f"Displaying image {image_path}")
             time.sleep(self.image_switch_interval)

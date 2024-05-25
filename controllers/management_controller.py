@@ -3,7 +3,6 @@ import os
 import socket
 import psutil
 import threading
-import re
 from threading import Lock
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
@@ -53,7 +52,7 @@ class ManagementController:
         return filepath
 
     def upload_image(self, url):
-        if url.startswith("http://") or url.startswith("https://"):
+        if url.startswith(("http://", "https://")):
             filename = self.add_image(url)
             if filename:
                 self.distribute_image(filename)
@@ -126,39 +125,43 @@ class ManagementController:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")
 
     def get_interfaces(self):
-        interfaces = ['0.0.0.0'] #, '::'] # Default interfaces
-        regex_public_ipv6 = r"^(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$"
+        interfaces = ['0.0.0.0'] # Default interfaces
         for interface, addrs in psutil.net_if_addrs().items():
             for addr in addrs:
                 if addr.family == socket.AF_INET:
                     interfaces.append(addr.address)
-                # elif addr.family == socket.AF_INET6:
-                #     if re.match(regex_public_ipv6, addr.address):
-                #         interfaces.append(addr.address)
         return interfaces
-    
-    def update_server(self, ipaddr, port):
-        regex_ipv4 = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-        regex_ipv6 = r"^(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$"
-        if not re.match(regex_ipv4, ipaddr) and not re.match(regex_ipv6, ipaddr):
+
+    def check_server(self, ipaddr, port):
+        if not self.addrport_model.is_address_valid(ipaddr):
             logger.log_error(f"Invalid IP address: {ipaddr}")
-            messagebox.showerror("Error", "Invalid IP address")
             return
-        port = int(port)
-        if port < 0 or port > 65535:
+        if not self.addrport_model.is_port_valid(port):
             logger.log_error(f"Invalid port: {port}")
-            messagebox.showerror("Error", "Invalid port")
             return
-        self.addrport_model.update_server(ipaddr, port)
+        if self.addrport_model.is_port_in_use(ipaddr, port):
+            logger.log_error(f"Port {port} is already in use on {ipaddr}")
+            return
+        return True
+
+    def update_server(self, ipaddr, port):
+        if not self.check_server(ipaddr, port):
+            messagebox.showerror("Error", "Invalid IP address or port, or port is already in use, please check the logs")
+            return
+        self.addrport_model.endpoint_ipaddr = ipaddr
+        self.addrport_model.endpoint_port = port
+        logger.log_action(f"Server updated to {ipaddr}:{port}")
         self.stop_rpc_server()
         self.start_rpc_server()
-        logger.log_action(f"Server updated to {ipaddr}:{port}")
 
     def start_rpc_server(self):
         with self.rpc_server_lock:
             if self.rpc_server and self.rpc_server.is_alive():
                 logger.log_error("RPC server is already running.")
                 return  # Server is already running
+            # Check if IP address and port are valid
+            if not self.check_server(self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port):
+                return
             self.rpc_server = rpcserver.RPCServer(self, self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port)
             self.rpc_server_thread = threading.Thread(target=self.rpc_server.start, daemon=True)
             self.rpc_server_thread.start()

@@ -1,6 +1,6 @@
 background_color: skyblue
-endpoint_ipaddr: 127.0.0.1
-endpoint_port: 8000
+endpoint_ipaddr: 0.0.0.0
+endpoint_port: 5000
 fullscreen: false
 image_switch_interval: 5
 nodes: []
