@@ -13,15 +13,15 @@ class ManagementView:
         # Bind 'Escape' key to destroy management view
         self.management_win.bind("<Escape>", lambda e: self.management_win.destroy())
 
-        # 主框架
+        # Main frame
         self.main_frame = tk.Frame(self.management_win)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 创建Notebook小部件
+        # Notebook
         self.notebook = ttk.Notebook(self.main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
-        # 管理节点部分
+        # Node management part
         self.node_frame = tk.Frame(self.notebook)
         self.notebook.add(self.node_frame, text="Nodes")
 
@@ -40,7 +40,7 @@ class ManagementView:
         self.remove_button = tk.Button(self.node_frame, text="Remove Selected Node", command=self.remove_node)
         self.remove_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
-        # 上传图片部分
+        # Image management part
         self.upload_frame = tk.Frame(self.notebook)
         self.notebook.add(self.upload_frame, text="Images")
 
@@ -62,9 +62,9 @@ class ManagementView:
         self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
         self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
-        # 合并接口信息和服务器设置部分
+        # Interface and server management part
         self.interface_server_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.interface_server_frame, text="Interface & Server")
+        self.notebook.add(self.interface_server_frame, text="Interface")
 
         self.interface_listbox = tk.Listbox(self.interface_server_frame)
         self.interface_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -73,7 +73,7 @@ class ManagementView:
         for interface in interfaces:
             self.interface_listbox.insert(tk.END, interface)
 
-        self.server_ip_label = tk.Label(self.interface_server_frame, text="Server IP Address")
+        self.server_ip_label = tk.Label(self.interface_server_frame, text="Interface IP Address")
         self.server_ip_label.grid(row=1, column=0, sticky="ew")
 
         self.server_ip_entry = tk.Entry(self.interface_server_frame)
@@ -90,7 +90,7 @@ class ManagementView:
         self.update_server_button = tk.Button(self.interface_server_frame, text="Update Server", command=self.update_server)
         self.update_server_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
-        # 配置网格布局
+        # Grid configuration
         self.node_frame.grid_rowconfigure(0, weight=1)
         self.node_frame.grid_rowconfigure(1, weight=0)
         self.node_frame.grid_rowconfigure(2, weight=0)
