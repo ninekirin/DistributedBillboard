@@ -2,7 +2,7 @@
 Distributed Billboard is a decentralized application that allows nodes to update images remotely.
 
 ## Installation
-1. Install (Python)[https://www.python.org/downloads/].
+1. Install [Python](https://www.python.org/downloads/).
 2. Clone the repository.
 ```bash
 git clone https://github.com/ninekirin/DistributedBillboard.git
