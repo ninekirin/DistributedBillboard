@@ -2,7 +2,10 @@ import os
 import base64
 from urllib.request import urlretrieve
 from PIL import Image
+import pillow_avif
 import utils.log as logger
+
+extentions = (".jpg", ".jpeg", ".png", ".avif", ".webp", ".gif", ".bmp", ".tiff")
 
 class ImageModel:
     def __init__(self):
@@ -33,15 +36,15 @@ class ImageModel:
 
         # Load images from cache
         for filename in path_list:
-            if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            if filename.lower().endswith(extentions):
                 self.image_list.append(os.path.join(self.image_cache_dir, filename))
 
     def download_image(self, url):
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
         if not os.path.exists(filename):
-            print(f"Downloading image from {url} to {filename}")
+            logger.log_action(f"Downloading image from \"{url}\" to {filename}")
             urlretrieve(url, filename)
-            logger.log_action(f"Downloaded image from {url}")
+            logger.log_action(f"Downloaded image from \"{url}\"")
         # validate image
         try:
             Image.open(filename).verify()

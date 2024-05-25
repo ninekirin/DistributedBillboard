@@ -4,7 +4,6 @@ import socket
 import psutil
 import threading
 import re
-import asyncio
 from threading import Lock
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
@@ -13,7 +12,7 @@ from models.node_model import NodeModel
 from models.addrport_model import AddrPortModel
 import utils.log as logger
 import utils.rpcserver as rpcserver
-from utils.config import save_config
+from models.image_model import extentions
 
 class ManagementController:
     def __init__(self, root, display_controller, endpoint_ipaddr, endpoint_port):
@@ -60,8 +59,8 @@ class ManagementController:
                 self.distribute_image(filename)
                 return filename
         else:
-            file_path = filedialog.askopenfilename()
-            url_prefix = "file://"
+            file_path = filedialog.askopenfilename(filetypes=[("Image files", extentions)], initialdir=os.getcwd(), title="Select Image File")
+            url_prefix = "file://" # Default to Unix-like systems
             if file_path:
                 if os.name == "nt": # Windows
                     url_prefix = "file:///"

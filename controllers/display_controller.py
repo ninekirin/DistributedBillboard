@@ -2,6 +2,7 @@ import threading
 import time
 import tkinter as tk
 from PIL import Image, ImageTk
+import pillow_avif
 from models.image_model import ImageModel
 import utils.log as logger
 

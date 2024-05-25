@@ -13,7 +13,6 @@ class NodeModel:
         return self.peer_nodes
 
     def add_node(self, node_url):
-        print(self.peer_nodes)
         if not self.peer_nodes:
             self.peer_nodes = []
         if node_url and node_url not in self.peer_nodes:
