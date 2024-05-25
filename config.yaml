@@ -1,9 +1,8 @@
 background_color: skyblue
 endpoint_ipaddr: 0.0.0.0
-endpoint_port: 5000
-fullscreen: false
+endpoint_port: 6000
+fullscreen: true
 image_switch_interval: 15
-nodes:
-- http://121.199.7.179:6000
+nodes: []
 ping_interval: 15
 ping_timeout: 1
