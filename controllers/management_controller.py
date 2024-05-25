@@ -31,8 +31,8 @@ class ManagementController:
             self.destroy()
         else:
             self.show()
-            # Bind 'm' key to toggle management view
-            self.management_view.management_win.bind("<Key>", lambda e: self.toggle() if e.char == 'm' else None)
+            # Bind escape key to toggle management mode
+            self.management_view.management_win.bind("<Escape>", lambda e: self.toggle())
 
     def show(self):
         self.management_view = ManagementView(self.root, self)
