@@ -56,12 +56,13 @@ class ManagementController:
     def upload_image(self, url):
         if url.startswith("http://") or url.startswith("https://"):
             filename = self.add_image(url)
-            self.distribute_image(filename)
-            return filename
+            if filename:
+                self.distribute_image(filename)
+                return filename
         else:
             file_path = filedialog.askopenfilename()
             if file_path:
-                local_url = f"file://{file_path}"
+                local_url = f"file:///{file_path}"
                 filename = self.add_image(local_url)
                 self.distribute_image(filename)
                 return filename

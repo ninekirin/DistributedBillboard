@@ -39,6 +39,7 @@ class ImageModel:
     def download_image(self, url):
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
         if not os.path.exists(filename):
+            print(f"Downloading image from {url} to {filename}")
             urlretrieve(url, filename)
             logger.log_action(f"Downloaded image from {url}")
         # validate image
