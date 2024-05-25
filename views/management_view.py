@@ -1,7 +1,13 @@
 import re
+import threading
 import tkinter as tk
 from tkinter import ttk
 import os
+from utils.config import load_config, save_config
+
+config = load_config()
+
+ping_interval = config.get('ping_interval', 15) * 1000
 
 class ManagementView:
     def __init__(self, root, controller):
@@ -176,12 +182,15 @@ class ManagementView:
     def update_node_listbox(self):
         # get selected index
         selected = self.node_listbox.curselection()
-        self.node_listbox.delete(0, tk.END)
-        for node, status in self.controller.get_nodes_with_status():
-            status_text = "Online" if status else "Offline"
-            self.node_listbox.insert(tk.END, f"{node} - {status_text}")
-        if selected:
-            self.node_listbox.selection_set(selected)
+        def update():
+            nodes_with_status = self.controller.get_nodes_with_status()
+            self.node_listbox.delete(0, tk.END)
+            for node, status in nodes_with_status:
+                status_text = "Online" if status else "Offline"
+                self.node_listbox.insert(tk.END, f"{node} - {status_text}")
+            if selected:
+                self.node_listbox.selection_set(selected)
+        threading.Thread(target=update).start()
 
     def on_node_double_click(self, event):
         selected = self.node_listbox.curselection()
@@ -224,5 +233,5 @@ class ManagementView:
             tk.messagebox.showerror("Invalid Input", "IP and Port cannot be empty.")
 
     def schedule_status_updates(self):
-            self.update_node_listbox()
-            self.management_win.after(5000, self.schedule_status_updates)  # Update every 5 seconds
+        threading.Thread(target=self.update_node_listbox).start()
+        self.management_win.after(ping_interval, self.schedule_status_updates)  # Update every 5 seconds

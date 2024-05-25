@@ -4,6 +4,7 @@ import socket
 import psutil
 import threading
 from threading import Lock
+import concurrent.futures
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
 from views.management_view import ManagementView
@@ -78,7 +79,9 @@ class ManagementController:
             self.distribute_remove_image(url)
 
     def add_node(self, node_url):
-        self.node_model.add_node(node_url)
+        if not self.node_model.add_node(node_url):
+            messagebox.showerror("Error", "Failed to add node, please check the logs")
+            return False
 
     def remove_node(self, node_url):
         self.node_model.remove_node(node_url)
@@ -86,9 +89,16 @@ class ManagementController:
     def get_nodes_with_status(self):
         nodes = self.node_model.get_nodes()
         nodes_status = []
-        for node in nodes:
+
+        def check_node_status(node):
             online_status = self.node_model.is_node_online(node)
-            nodes_status.append((node, online_status))
+            return (node, online_status)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(check_node_status, node) for node in nodes]
+            for future in concurrent.futures.as_completed(futures):
+                nodes_status.append(future.result())
+
         return nodes_status
 
     def ping(self, node_url):
