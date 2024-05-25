@@ -16,13 +16,13 @@ import utils.rpcserver as rpcserver
 from models.image_model import extentions
 
 class ManagementController:
-    def __init__(self, root, display_controller, endpoint_ipaddr, endpoint_port):
+    def __init__(self, root, display_controller):
         self.root = root
         self.display_controller = display_controller
         
         self.node_model = NodeModel(get_config('nodes', []), get_config('ping_timeout', 1))
         self.image_model = self.display_controller.image_model
-        self.addrport_model = AddrPortModel(endpoint_ipaddr, endpoint_port)
+        self.addrport_model = AddrPortModel(get_config('endpoint_ipaddr', '0.0.0.0'), get_config('endpoint_port', 8000))
         self.management_view = None
         self.rpc_server = None
         self.rpc_server_thread = None
@@ -34,11 +34,11 @@ class ManagementController:
             self.destroy()
         else:
             self.show()
-            # Bind escape key to toggle management mode
-            self.management_view.management_win.bind("<Escape>", lambda e: self.toggle())
 
     def show(self):
         self.management_view = ManagementView(self.root, self)
+        # Bind escape key to destroy management mode
+        self.management_view.management_win.bind("<Escape>", lambda e: self.destroy())
 
     def destroy(self):
         if self.management_view:
@@ -151,9 +151,6 @@ class ManagementController:
         if not self.addrport_model.is_port_valid(port):
             logger.log_error(f"Invalid port: {port}")
             return
-        if self.addrport_model.is_port_in_use(ipaddr, port):
-            logger.log_error(f"Port {port} is already in use on {ipaddr}")
-            return
         return True
 
     def update_server(self, ipaddr, port):
@@ -173,6 +170,9 @@ class ManagementController:
                 return  # Server is already running
             # Check if IP address and port are valid
             if not self.check_server(self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port):
+                return
+            if self.addrport_model.is_port_in_use(self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port):
+                logger.log_error(f"Port {self.addrport_model.endpoint_port} is already in use on {self.addrport_model.endpoint_ipaddr}")
                 return
             self.rpc_server = rpcserver.RPCServer(self, self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port)
             self.rpc_server_thread = threading.Thread(target=self.rpc_server.start, daemon=True)
