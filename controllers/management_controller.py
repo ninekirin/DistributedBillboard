@@ -80,13 +80,14 @@ class ManagementController:
         return None
     
     def remove_image(self, url, distribution=True):
-        print(url)
-        self.image_model.remove_image(url)
+        # convert url to local path
+        result = self.image_model.remove_image(url)
         # Remove image from image_listbox in management_view (if exists)
         if self.management_view.management_win.winfo_exists():
             self.management_view.update_image_listbox()
         if distribution:
             threading.Thread(target=self.distribute_remove_image, args=(url,), daemon=True).start()
+        return result
 
     def add_node(self, node_url):
         return self.node_model.add_node(node_url)
