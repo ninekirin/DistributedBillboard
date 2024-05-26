@@ -9,9 +9,9 @@ extentions = (".jpg", ".jpeg", ".png", ".avif", ".webp", ".gif", ".bmp", ".tiff"
 
 class ImageModel:
     def __init__(self):
-        if os.name == "nt":
+        if os.name == "nt": # for Windows
             self.image_cache_dir = ".\\images"
-        else:
+        elif os.name == "posix": # for macOS or Linux
             self.image_cache_dir = "./images"
         self.image_list = []
         self.current_image_index = -1 # start from -1 at startup
@@ -85,6 +85,10 @@ class ImageModel:
         return None
     
     def remove_image(self, url):
+        if os.name == "nt": # for Windows
+            url = url.replace("/", "\\")
+        elif os.name == "posix": # for macOS or Linux
+            url = url.replace("\\", "/")
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
         if filename in self.image_list:
             self.image_list.remove(filename)

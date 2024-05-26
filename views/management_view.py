@@ -319,10 +319,10 @@ class ManagementView:
         selected = self.image_listbox.curselection()
         if selected:
             filename = self.image_listbox.get(selected)
-            if os.name == 'posix':  # for macOS or Linux
-                os.system(f'open "{filename}"')
-            elif os.name == 'nt':  # for Windows
+            if os.name == 'nt':  # for Windows
                 os.startfile(filename)
+            elif os.name == 'posix':  # for macOS or Linux
+                os.system(f'open "{filename}"')
 
     def on_interface_click(self, event):
         selected = self.interface_listbox.curselection()

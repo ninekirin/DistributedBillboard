@@ -68,10 +68,11 @@ class ManagementController:
                 return filename
         else:
             file_path = filedialog.askopenfilename(filetypes=[("Image files", extentions)], title="Select Image File")
-            url_prefix = "file://" # Default to Unix-like systems
             if file_path:
                 if os.name == "nt": # Windows
                     url_prefix = "file:///"
+                elif os.name == "posix": # macOS or Linux
+                    url_prefix = "file://"
                 local_url = f"{url_prefix}{file_path}"
                 filename = self.add_image(local_url)
                 if filename:
