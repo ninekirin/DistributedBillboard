@@ -73,6 +73,10 @@ class ImageModel:
         return None
     
     def add_image_base64(self, filename, base64data):
+        if os.name == "nt": # for Windows
+            filename = filename.replace("/", "\\")
+        elif os.name == "posix": # for macOS or Linux
+            filename = filename.replace("\\", "/")
         data = base64.b64decode(base64data)
         filepath = os.path.join(self.image_cache_dir, filename)
         if not os.path.exists(filepath):

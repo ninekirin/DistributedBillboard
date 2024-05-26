@@ -81,7 +81,6 @@ class ManagementController:
         return None
     
     def remove_image(self, url, distribution=True):
-        # convert url to local path
         result = self.image_model.remove_image(url)
         # Remove image from image_listbox in management_view (if exists)
         if self.management_view.management_win.winfo_exists():
@@ -126,7 +125,7 @@ class ManagementController:
                     node.add_image_base64(os.path.basename(filename), base64data, False)
                     logger.log_action(f"Distributed image {filename} to {peer['node']}")
             except Exception as e:
-                logger.log_error(f"Error distributing to {peer}: {e}")
+                logger.log_error(f"Error distributing to {peer['node']}: {e}")
     
     def distribute_remove_image(self, url):
         nodes = self.node_model.get_nodes_dict()
@@ -137,7 +136,7 @@ class ManagementController:
                     node.remove_image(url, False)
                     logger.log_action(f"Distributed remove image {url} to {peer['node']}")
             except Exception as e:
-                logger.log_error(f"Error distributing remove to {peer}: {e}")
+                logger.log_error(f"Error distributing remove to {peer['node']}: {e}")
 
     def get_interfaces(self):
         interfaces = ['0.0.0.0'] # Default interfaces
