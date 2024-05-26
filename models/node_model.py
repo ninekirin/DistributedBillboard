@@ -4,6 +4,7 @@ import concurrent.futures
 from jsonrpclib import Server
 import socket
 import uuid
+import threading
 
 class NodeModel:
 
@@ -13,7 +14,8 @@ class NodeModel:
         self.ping_timeout = ping_timeout
 
         self.peer_nodes_dict = []
-        self.check_nodes_status()
+        
+        threading.Thread(target=self.check_nodes_status, daemon=True).start()
 
     def set_ping_timeout(self, timeout):
         self.ping_timeout = timeout
