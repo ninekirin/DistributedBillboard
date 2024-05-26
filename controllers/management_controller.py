@@ -157,6 +157,7 @@ class ManagementController:
         logger.log_action(f"Server updated to {ipaddr}:{port}")
         self.stop_rpc_server()
         self.start_rpc_server()
+        return True
 
     def start_rpc_server(self):
         with self.rpc_server_lock:
