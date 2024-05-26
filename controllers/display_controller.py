@@ -68,6 +68,8 @@ class DisplayController:
             self.display_image(self.current_image_path)
 
     def display_image(self, image_path):
+        if image_path is None:
+            return
         self.current_image_path = image_path
         img = Image.open(image_path)
         window_width = self.root.winfo_width()
@@ -96,5 +98,5 @@ class DisplayController:
                     self.image_model.remove_image(image_path, distribution=False)
                     continue
                 self.display_image(image_path)
-            logger.log_action(f"Displaying image {image_path}")
+                logger.log_action(f"Displaying image {image_path}")
             time.sleep(self.image_switch_interval)

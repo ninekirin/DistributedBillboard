@@ -92,6 +92,7 @@ class ImageModel:
             self.current_image_index = 0
             logger.log_action(f"Removed image {url}")
             return True
+        return False
 
     def get_image_list(self):
         return self.image_list

@@ -47,7 +47,7 @@ class ManagementController:
             return filepath
         return None
     
-    def add_image_base64(self, filename, base64data):
+    def add_image_base64(self, filename, base64data, distribution=True):
         filepath = self.image_model.add_image_base64(filename, base64data)
         # self.management_view.image_listbox_add_item(filepath)
         if self.management_view.management_win.winfo_exists():
@@ -60,7 +60,8 @@ class ManagementController:
         if url.startswith(("http://", "https://")):
             filename = self.add_image(url)
             if filename:
-                self.distribute_image(filename)
+                # self.distribute_image(filename)
+                threading.Thread(target=self.distribute_image, args=(filename,), daemon=True).start()
                 return filename
         else:
             file_path = filedialog.askopenfilename(filetypes=[("Image files", extentions)], title="Select Image File")
@@ -71,7 +72,8 @@ class ManagementController:
                 local_url = f"{url_prefix}{file_path}"
                 filename = self.add_image(local_url)
                 if filename:
-                    self.distribute_image(filename)
+                    # self.distribute_image(filename)
+                    threading.Thread(target=self.distribute_image, args=(filename,), daemon=True).start()
                     return filename
         return None
     
@@ -81,7 +83,8 @@ class ManagementController:
         if self.management_view.management_win.winfo_exists():
             self.management_view.update_image_listbox()
         if distribution:
-            self.distribute_remove_image(url)
+            # self.distribute_remove_image(url)
+            threading.Thread(target=self.distribute_remove_image, args=(url,), daemon=True).start()
 
     def add_node(self, node_url):
         return self.node_model.add_node(node_url)
@@ -106,24 +109,24 @@ class ManagementController:
 
     def distribute_image(self, filename):
         nodes = self.node_model.get_nodes_dict()
-        for peer in nodes:
+        for peer in [node for node in nodes if node['uuid'] != self.node_model.uuid]:
             try:
                 if peer['pong']:
-                    node = Server(peer)
+                    node = Server(peer['node'])
                     with open(filename, "rb") as f:
                         base64data = base64.b64encode(f.read()).decode('utf-8')
-                    node.add_image_base64(os.path.basename(filename), base64data)
-                    logger.log_action(f"Distributed image {filename} to {peer}")
+                    node.add_image_base64(os.path.basename(filename), base64data, True)
+                    logger.log_action(f"Distributed image {filename} to {peer['node']}")
             except Exception as e:
                 logger.log_error(f"Error distributing to {peer}: {e}")
     
     def distribute_remove_image(self, url):
         nodes = self.node_model.get_nodes_dict()
-        for peer in nodes:
+        for peer in [node for node in nodes if node['uuid'] != self.node_model.uuid]:
             try:
                 if peer['pong']:
                     node = Server(peer['node'])
-                    node.remove_image(url, False)
+                    node.remove_image(url, True)
                     logger.log_action(f"Distributed remove image {url} to {peer['node']}")
             except Exception as e:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")
