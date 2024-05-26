@@ -38,3 +38,6 @@ if __name__ == "__main__":
     root.bind("<Key>", lambda e: on_key_press(e, management_controller))
     
     root.mainloop()
+    
+    # Stop JSON-RPC server
+    management_controller.stop_rpc_server()
