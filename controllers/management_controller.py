@@ -157,8 +157,7 @@ class ManagementController:
         if not self.check_server(ipaddr, port):
             messagebox.showerror("Error", "Invalid IP address or port, or port is already in use, please check the logs")
             return
-        self.addrport_model.endpoint_ipaddr = ipaddr
-        self.addrport_model.endpoint_port = port
+        self.addrport_model.update_server(ipaddr, port)
         logger.log_action(f"Server updated to {ipaddr}:{port}")
         self.stop_rpc_server()
         self.start_rpc_server()
