@@ -1,6 +1,7 @@
 import threading
 import time
 import tkinter as tk
+from tkinter import messagebox
 import os
 from PIL import Image, ImageTk
 import pillow_avif
@@ -36,13 +37,21 @@ class DisplayController:
         # Mouse click to show next image
         self.root.bind('<Button-1>', lambda e: self.display_image(self.image_model.get_next_image()))
 
+        # Keyboard press to show next image
+        self.root.bind('<Right>', lambda e: self.display_image(self.image_model.get_next_image()))
+
+        # Keyboard press to show previous image
+        self.root.bind('<Left>', lambda e: self.display_image(self.image_model.get_prev_image()))
+
     def set_background_color(self, color):
         try:
             self.label.configure(background=color)
             return True
         except:
             logger.log_error(f"Invalid background color: {color}")
-            tk.messagebox.showerror("Error", f"Invalid background color: {color}")
+            messagebox.showerror("Error", f"Invalid background color: {color}")
+            # set focus back to the window
+            self.root.focus_force()
             return False
 
     def set_image_switch_interval(self, interval):

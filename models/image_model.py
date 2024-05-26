@@ -14,7 +14,7 @@ class ImageModel:
         else:
             self.image_cache_dir = "./images"
         self.image_list = []
-        self.current_image_index = 0
+        self.current_image_index = -1 # start from -1 at startup
 
         if not os.path.exists(self.image_cache_dir):
             os.makedirs(self.image_cache_dir)
@@ -57,10 +57,11 @@ class ImageModel:
         # validate image
         try:
             Image.open(filename).verify()
+            return filename
         except Exception as e:
             os.remove(filename)
-            raise Exception(f"Invalid image: {url}")
-        return filename
+            logger.log_error(f"Invalid image: {url}")
+            return None
 
     def add_image(self, url):
         filename = self.download_image(url)
@@ -92,12 +93,19 @@ class ImageModel:
             logger.log_action(f"Removed image {url}")
             return True
 
-    def get_images(self):
+    def get_image_list(self):
         return self.image_list
 
     def get_next_image(self):
         if not self.image_list:
             return None
-        image_path = self.image_list[self.current_image_index]
         self.current_image_index = (self.current_image_index + 1) % len(self.image_list)
+        image_path = self.image_list[self.current_image_index]
+        return image_path
+
+    def get_prev_image(self):
+        if not self.image_list:
+            return None
+        self.current_image_index = (self.current_image_index - 1) % len(self.image_list)
+        image_path = self.image_list[self.current_image_index]
         return image_path

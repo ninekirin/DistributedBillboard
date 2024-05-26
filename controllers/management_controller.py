@@ -4,7 +4,6 @@ import socket
 import psutil
 import threading
 from threading import Lock
-import concurrent.futures
 from tkinter import filedialog, messagebox
 from jsonrpclib import Server
 from utils.config import get_config, update_config
@@ -23,37 +22,39 @@ class ManagementController:
         self.node_model = NodeModel(get_config('nodes', []), get_config('ping_timeout', 1))
         self.image_model = self.display_controller.image_model
         self.addrport_model = AddrPortModel(get_config('endpoint_ipaddr', '0.0.0.0'), get_config('endpoint_port', 8000))
-        self.management_view = None
+
         self.rpc_server = None
         self.rpc_server_thread = None
         self.rpc_server_lock = Lock()
         self.ping_interval = get_config('ping_interval', 15)
 
-    def toggle(self):
-        if self.management_view:
-            self.destroy()
-        else:
-            self.show()
-
-    def show(self):
         self.management_view = ManagementView(self.root, self)
-        # Bind escape key to destroy management mode
-        self.management_view.management_win.bind("<Escape>", lambda e: self.destroy())
 
-    def destroy(self):
-        if self.management_view:
-            self.management_view.management_win.destroy()
-            self.management_view = None
+        # hide management_view by default
+        self.management_view.management_win.withdraw()
+
+    def toggle(self):
+        if self.management_view.management_win.state() == "normal":
+            self.management_view.management_win.withdraw()
+        elif self.management_view.management_win.state() == "withdrawn":
+            self.management_view.management_win.deiconify()
 
     def add_image(self, url):
         filepath = self.image_model.add_image(url)
-        return filepath
+        if self.management_view.management_win.winfo_exists():
+            self.management_view.update_image_listbox()
+        if filepath:
+            return filepath
+        return None
     
     def add_image_base64(self, filename, base64data):
         filepath = self.image_model.add_image_base64(filename, base64data)
         # self.management_view.image_listbox_add_item(filepath)
-        self.management_view.update_image_listbox()
-        return filepath
+        if self.management_view.management_win.winfo_exists():
+            self.management_view.update_image_listbox()
+        if filepath:
+            return filepath
+        return None
 
     def upload_image(self, url):
         if url.startswith(("http://", "https://")):
@@ -62,7 +63,7 @@ class ManagementController:
                 self.distribute_image(filename)
                 return filename
         else:
-            file_path = filedialog.askopenfilename(filetypes=[("Image files", extentions)], initialdir=os.getcwd(), title="Select Image File")
+            file_path = filedialog.askopenfilename(filetypes=[("Image files", extentions)], title="Select Image File")
             url_prefix = "file://" # Default to Unix-like systems
             if file_path:
                 if os.name == "nt": # Windows
@@ -77,67 +78,53 @@ class ManagementController:
     def remove_image(self, url, distribution=True):
         self.image_model.remove_image(url)
         # Remove image from image_listbox in management_view (if exists)
-        if self.management_view:
-            self.management_view.image_listbox_remove_item(url)
+        if self.management_view.management_win.winfo_exists():
+            self.management_view.update_image_listbox()
         if distribution:
             self.distribute_remove_image(url)
 
     def add_node(self, node_url):
-        if not self.node_model.add_node(node_url):
-            messagebox.showerror("Error", "Failed to add node, please check the logs")
-            return False
+        return self.node_model.add_node(node_url)
+    
+    def edit_node(self, node_url, new_node_url):
+        return self.node_model.edit_node(node_url, new_node_url)
 
     def remove_node(self, node_url):
-        self.node_model.remove_node(node_url)
-
-    def get_nodes_with_status(self):
-        nodes = self.node_model.get_nodes()
-        nodes_status = []
-
-        def check_node_status(node):
-            online_status = self.node_model.is_node_online(node)
-            return (node, online_status)
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(check_node_status, node) for node in nodes]
-            for future in concurrent.futures.as_completed(futures):
-                nodes_status.append(future.result())
-
-        return nodes_status
+        return self.node_model.remove_node(node_url)
     
-    def get_images(self):
-        return self.image_model.get_images()
-
-    def ping(self, node_url):
-        try:
-            server = Server(node_url)
-            return server.pong()
-        except Exception as e:
-            logger.log_error(f"Error pinging {node_url}: {e}")
-            return False
-
-    def pong(self):
-        return 'pong'
+    def get_nodes(self):
+        return self.node_model.get_nodes()
+    
+    def get_nodes_dict(self):
+        return self.node_model.get_nodes_dict()
+    
+    def debug_get_nodes_dict(self):
+        logger.log_action(self.node_model.get_nodes_dict())
+    
+    def get_image_list(self):
+        return self.image_model.get_image_list()
 
     def distribute_image(self, filename):
-        nodes = self.node_model.get_nodes()
+        nodes = self.node_model.get_nodes_dict()
         for peer in nodes:
             try:
-                node = Server(peer)
-                with open(filename, "rb") as f:
-                    base64data = base64.b64encode(f.read()).decode('utf-8')
-                node.add_image_base64(os.path.basename(filename), base64data)
-                logger.log_action(f"Distributed image {filename} to {peer}")
+                if peer['pong']:
+                    node = Server(peer)
+                    with open(filename, "rb") as f:
+                        base64data = base64.b64encode(f.read()).decode('utf-8')
+                    node.add_image_base64(os.path.basename(filename), base64data)
+                    logger.log_action(f"Distributed image {filename} to {peer}")
             except Exception as e:
                 logger.log_error(f"Error distributing to {peer}: {e}")
     
     def distribute_remove_image(self, url):
-        nodes = self.node_model.get_nodes()
+        nodes = self.node_model.get_nodes_dict()
         for peer in nodes:
             try:
-                node = Server(peer)
-                node.remove_image(url, False)
-                logger.log_action(f"Distributed remove image {url} to {peer}")
+                if peer['pong']:
+                    node = Server(peer['node'])
+                    node.remove_image(url, False)
+                    logger.log_action(f"Distributed remove image {url} to {peer['node']}")
             except Exception as e:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")
 
@@ -160,8 +147,7 @@ class ManagementController:
 
     def update_server(self, ipaddr, port):
         if not self.check_server(ipaddr, port):
-            messagebox.showerror("Error", "Invalid IP address or port, or port is already in use, please check the logs")
-            return
+            return False
         self.addrport_model.update_server(ipaddr, port)
         logger.log_action(f"Server updated to {ipaddr}:{port}")
         self.stop_rpc_server()

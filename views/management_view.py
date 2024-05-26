@@ -1,9 +1,8 @@
 import re
 import threading
 import tkinter as tk
-from tkinter import ttk
 import os
-from utils.config import get_config, update_config
+from tkinter import ttk, messagebox
 
 class ManagementView:
     def __init__(self, root, controller):
@@ -12,9 +11,8 @@ class ManagementView:
         self.management_win = tk.Toplevel(self.root)
         self.management_win.title("Manage Billboard")
 
-        # Bind 'Escape' key to destroy management view
-        self.management_win.bind("<Escape>", lambda e: self.management_win.destroy())
-
+        # Bind 'Escape' key to deiconify management view
+        self.management_win.bind("<Escape>", lambda e: self.management_win.deiconify())
         # Main frame
         self.main_frame = tk.Frame(self.management_win)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
@@ -22,6 +20,31 @@ class ManagementView:
         # Notebook
         self.notebook = ttk.Notebook(self.main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True)
+
+        # Image management part
+        self.upload_frame = tk.Frame(self.notebook)
+        self.notebook.add(self.upload_frame, text="Images")
+
+        self.image_listbox = tk.Listbox(self.upload_frame)
+        self.image_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+        for image in self.controller.image_model.get_image_list():
+            self.image_listbox.insert(tk.END, image)
+
+        self.image_entry_label = tk.Label(self.upload_frame, text="Image URL")
+        self.image_entry_label.grid(row=1, column=0, sticky="ew")
+
+        self.image_var = tk.StringVar()
+        self.image_entry = tk.Entry(self.upload_frame, textvariable=self.image_var)
+        self.image_entry.grid(row=1, column=1, sticky="ew")
+        self.image_var.trace_add("write", lambda name, index, mode: self.update_upload_button_text())
+
+        self.upload_img_button = tk.Button(self.upload_frame, text="Select Image From Filesystem", command=self.upload_image)
+        self.upload_img_button.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.update_upload_button_text()
+
+        self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
+        self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
         # Node management part
         self.node_frame = tk.Frame(self.notebook)
@@ -39,33 +62,11 @@ class ManagementView:
         self.add_button = tk.Button(self.node_frame, text="Add Node", command=self.add_node)
         self.add_button.grid(row=2, column=0, columnspan=2, sticky="ew")
 
+        self.edit_button = tk.Button(self.node_frame, text="Edit Selected Node", command=self.edit_node)
+        self.edit_button.grid(row=3, column=0, columnspan=2, sticky="ew")
+
         self.remove_button = tk.Button(self.node_frame, text="Remove Selected Node", command=self.remove_node)
-        self.remove_button.grid(row=3, column=0, columnspan=2, sticky="ew")
-
-        # Image management part
-        self.upload_frame = tk.Frame(self.notebook)
-        self.notebook.add(self.upload_frame, text="Images")
-
-        self.image_listbox = tk.Listbox(self.upload_frame)
-        self.image_listbox.grid(row=0, column=0, columnspan=2, sticky="nsew")
-
-        for image in self.controller.image_model.get_images():
-            self.image_listbox.insert(tk.END, image)
-
-        self.image_entry_label = tk.Label(self.upload_frame, text="Image URL")
-        self.image_entry_label.grid(row=1, column=0, sticky="ew")
-
-        self.image_var = tk.StringVar()
-        self.image_entry = tk.Entry(self.upload_frame, textvariable=self.image_var)
-        self.image_entry.grid(row=1, column=1, sticky="ew")
-        self.image_var.trace_add("write", lambda name, index, mode: self.update_upload_button_text())
-
-        self.upload_img_button = tk.Button(self.upload_frame, text="Select Image From Filesystem", command=self.upload_image)
-        self.upload_img_button.grid(row=2, column=0, columnspan=2, sticky="ew")
-        self.update_upload_button_text()
-
-        self.remove_img_button = tk.Button(self.upload_frame, text="Remove Selected Image", command=self.remove_image)
-        self.remove_img_button.grid(row=3, column=0, columnspan=2, sticky="ew")
+        self.remove_button.grid(row=4, column=0, columnspan=2, sticky="ew")
 
         # Interface and server management part
         self.interface_server_frame = tk.Frame(self.notebook)
@@ -136,11 +137,16 @@ class ManagementView:
         self.save_button = tk.Button(self.other_frame, text="Save Settings", command=self.save_settings)
         self.save_button.grid(row=5, column=0, columnspan=2, sticky="ew")
 
+        # debug button: get nodes
+        self.get_nodes_button = tk.Button(self.other_frame, text="Debug: Get Nodes", command=self.controller.debug_get_nodes_dict)
+        self.get_nodes_button.grid(row=6, column=0, columnspan=2, sticky="ew")
+
         # Grid configuration
         self.node_frame.grid_rowconfigure(0, weight=1)
         self.node_frame.grid_rowconfigure(1, weight=0)
         self.node_frame.grid_rowconfigure(2, weight=0)
         self.node_frame.grid_rowconfigure(3, weight=0)
+        self.node_frame.grid_rowconfigure(4, weight=0)
         self.node_frame.grid_columnconfigure(0, weight=1)
         self.node_frame.grid_columnconfigure(1, weight=1)
 
@@ -158,11 +164,24 @@ class ManagementView:
         self.interface_server_frame.grid_columnconfigure(0, weight=1)
         self.interface_server_frame.grid_columnconfigure(1, weight=1)
 
+        self.other_frame.grid_rowconfigure(0, weight=0)
+        self.other_frame.grid_rowconfigure(1, weight=0)
+        self.other_frame.grid_rowconfigure(2, weight=0)
+        self.other_frame.grid_rowconfigure(3, weight=0)
+        self.other_frame.grid_rowconfigure(4, weight=0)
+        self.other_frame.grid_rowconfigure(5, weight=0)
+        self.other_frame.grid_rowconfigure(6, weight=0)
+        self.other_frame.grid_columnconfigure(0, weight=1)
+        self.other_frame.grid_columnconfigure(1, weight=1)
+
         # Bind double-click events
         self.node_listbox.bind("<Double-1>", self.on_node_double_click)
         self.image_listbox.bind("<Double-1>", self.on_image_double_click)
         # Bind click event for interface listbox
         self.interface_listbox.bind("<<ListboxSelect>>", self.on_interface_click)
+
+        # Bind 'Escape' key to deiconify management view
+        self.management_win.bind("<Escape>", lambda e: self.management_win.withdraw())
 
         # Schedule regular updates for node statuses
         self.schedule_status_updates()
@@ -170,33 +189,71 @@ class ManagementView:
         # Load settings
         self.load_settings()
 
+        # On close event: hide instead of closing
+        self.management_win.protocol("WM_DELETE_WINDOW", self.management_win.withdraw)
+
+    def on_closing(self):
+        self.management_win.withdraw()
+
     def add_node(self):
         node_url = self.node_entry.get()
         regex = r"^(http|https)://[a-zA-Z0-9.-]+(:[0-9]+)?/?$"
         if re.match(regex, node_url):
-            self.controller.add_node(node_url)
+            if not self.controller.add_node(node_url):
+                messagebox.showerror("Error", "Failed to add node, please check the logs")
+                # focus on the entry
+                self.node_entry.focus_set()
+                return
             self.update_node_listbox()
             self.node_entry.delete(0, tk.END)
         else:
-            tk.messagebox.showerror("Invalid URL", "Invalid URL format.\nPlease enter a valid URL.\nExample: http://127.0.0.1:6000")
+            messagebox.showerror("Invalid URL", "Invalid URL format.\nPlease enter a valid URL.\nExample: http://127.0.0.1:6000")
+            # focus on the entry
+            self.node_entry.focus_set()
+
+    def edit_node(self):
+        regex = r"^(http|https)://[a-zA-Z0-9.-]+(:[0-9]+)?/?$"
+        # get node_url and new_node_url
+        selected = self.node_listbox.curselection()
+        if selected:
+            node_info = self.node_listbox.get(selected)
+            node_url = node_info.split(' - ')[0]
+            new_node_url = self.node_entry.get()
+            if node_url == new_node_url:
+                messagebox.showerror("Error", "New node URL is the same as the current node URL.")
+                # focus on the entry
+                self.node_listbox.focus_set()
+                return
+            if re.match(regex, new_node_url):
+                if not self.controller.edit_node(node_url, new_node_url):
+                    messagebox.showerror("Error", "Failed to edit node, please check the logs")
+                    # focus on the entry
+                    self.node_listbox.focus_set()
+                    return
+                self.update_node_listbox()
+                self.node_entry.delete(0, tk.END)
+                # focus on the item
+                self.node_listbox.selection_set(selected)
+            else:
+                messagebox.showerror("Invalid URL", "Invalid URL format.\nPlease enter a valid URL.\nExample: http://127.0.0.1:6000")
+                # focus on the entry
+                self.node_listbox.focus_set()
+        else:
+            messagebox.showerror("Error", "Please select a node to edit.")
+            # focus on the entry
+            self.node_listbox.focus_set()
 
     def remove_node(self):
         selected = self.node_listbox.curselection()
         if selected:
             node_info = self.node_listbox.get(selected)
             node_url = node_info.split(' - ')[0]
-            self.controller.remove_node(node_url)
-            self.update_node_listbox()
+            if self.controller.remove_node(node_url):
+                self.update_node_listbox()
 
     def upload_image(self):
         url = self.image_entry.get()
-        filename = self.controller.upload_image(url)
-        if filename:
-            # self.image_listbox.insert(tk.END, filename)
-            self.image_entry.delete(0, tk.END)
-            self.update_image_listbox()
-        else:
-            tk.messagebox.showerror("Failed to Upload Image", "Failed to Upload Image.\nPlease check the logs for more information.")
+        self.controller.upload_image(url)
 
     def remove_image(self):
         selected = self.image_listbox.curselection()
@@ -226,7 +283,7 @@ class ManagementView:
 
     def update_image_listbox(self):
         selected = self.image_listbox.curselection()
-        images = self.controller.image_model.get_images()
+        images = self.controller.image_model.get_image_list()
         self.image_listbox.delete(0, tk.END)
         for image in images:
             self.image_listbox.insert(tk.END, image)
@@ -237,13 +294,17 @@ class ManagementView:
         # get selected index
         selected = self.node_listbox.curselection()
         def update():
-            nodes_with_status = self.controller.get_nodes_with_status()
-            self.node_listbox.delete(0, tk.END)
-            for node, status in nodes_with_status:
-                status_text = "Online" if status else "Offline"
-                self.node_listbox.insert(tk.END, f"{node} - {status_text}")
-            if selected:
-                self.node_listbox.selection_set(selected)
+            try:
+                nodes_with_status = self.controller.get_nodes_dict()
+                self.node_listbox.delete(0, tk.END)
+                for node in nodes_with_status:
+                    node_url = node['node']
+                    status = "Online" if node['pong'] else "Offline"
+                    self.node_listbox.insert(tk.END, f"{node_url} - {status}")
+                if selected:
+                    self.node_listbox.selection_set(selected)
+            except Exception as e:
+                pass
         threading.Thread(target=update).start()
 
     def on_node_double_click(self, event):
@@ -280,11 +341,14 @@ class ManagementView:
         if ip and port:
             try:
                 port = int(port)
-                self.controller.update_server(ip, port)
+                if not self.controller.update_server(ip, port):
+                    messagebox.showerror("Error", "Invalid IP address or port, or port is already in use.")
             except ValueError:
-                tk.messagebox.showerror("Invalid Port", "Port must be a number.")
+                messagebox.showerror("Invalid Port", "Port must be a number.")
+                self.server_port_entry.focus_set()
         else:
-            tk.messagebox.showerror("Invalid Input", "IP and Port cannot be empty.")
+            messagebox.showerror("Invalid Input", "IP and Port cannot be empty.")
+            self.server_ip_entry.focus_set()
 
     def schedule_status_updates(self):
         threading.Thread(target=self.update_node_listbox).start()
@@ -302,7 +366,8 @@ class ManagementView:
     def save_settings(self):
         # Validate input (ping_interval and ping_timeout must be greater than 0)
         if int(self.ping_interval_entry.get()) <= 0 or int(self.ping_timeout_entry.get()) <= 0 or int(self.img_switch_interval_entry.get()) <= 0:
-            tk.messagebox.showerror("Invalid Input", "Values must be greater than 0.")
+            messagebox.showerror("Invalid Input", "Values must be greater than 0.")
+            self.ping_interval_entry.focus_set()
             return
         settings = {
             'fullscreen': self.fullscreen_var.get(),

@@ -13,7 +13,7 @@ class RPCServer:
         self.server = SimpleJSONRPCServer((self.ipaddr, self.port), logRequests=False)
         self.server.register_function(self.controller.add_image_base64, 'add_image_base64')
         self.server.register_function(self.controller.remove_image, 'remove_image')
-        self.server.register_function(self.controller.pong, 'pong')
+        self.server.register_function(self.controller.node_model.pong, 'pong')
         logger.log_action(f"Starting RPC server on {self.ipaddr}:{self.port}")
         self.server.serve_forever()
 
