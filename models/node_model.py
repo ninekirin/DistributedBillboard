@@ -42,6 +42,7 @@ class NodeModel:
             for future in concurrent.futures.as_completed(futures):
                 nodes.append(future.result())
         self.peer_nodes_dict = nodes
+        return nodes
 
     def add_node(self, node_url):
         if node_url and node_url not in self.peer_nodes:

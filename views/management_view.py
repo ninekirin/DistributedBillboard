@@ -295,7 +295,7 @@ class ManagementView:
         selected = self.node_listbox.curselection()
         def update():
             try:
-                nodes_with_status = self.controller.get_nodes_dict()
+                nodes_with_status = self.controller.check_nodes_status()
                 self.node_listbox.delete(0, tk.END)
                 for node in nodes_with_status:
                     node_url = node['node']
@@ -351,7 +351,7 @@ class ManagementView:
             self.server_ip_entry.focus_set()
 
     def schedule_status_updates(self):
-        threading.Thread(target=self.update_node_listbox).start()
+        self.update_node_listbox()
         ping_interval = self.controller.ping_interval
         self.management_win.after(ping_interval * 1000, self.schedule_status_updates)
 

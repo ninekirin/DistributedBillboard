@@ -80,6 +80,7 @@ class ManagementController:
         return None
     
     def remove_image(self, url, distribution=True):
+        print(url)
         self.image_model.remove_image(url)
         # Remove image from image_listbox in management_view (if exists)
         if self.management_view.management_win.winfo_exists():
@@ -101,6 +102,9 @@ class ManagementController:
     
     def get_nodes_dict(self):
         return self.node_model.get_nodes_dict()
+    
+    def check_nodes_status(self):
+        return self.node_model.check_nodes_status()
     
     def debug_get_nodes_dict(self):
         logger.log_action(self.node_model.get_nodes_dict())
