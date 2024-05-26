@@ -11,7 +11,7 @@ from views.management_view import ManagementView
 from models.node_model import NodeModel
 from models.addrport_model import AddrPortModel
 import utils.log as logger
-import utils.rpcserver as rpcserver
+from utils.rpcserver import RPCServer
 from models.image_model import extentions
 
 class ManagementController:
@@ -153,10 +153,20 @@ class ManagementController:
     def update_server(self, ipaddr, port):
         if not self.check_server(ipaddr, port):
             return False
-        self.addrport_model.update_server(ipaddr, port)
-        logger.log_action(f"Server updated to {ipaddr}:{port}")
-        self.stop_rpc_server()
-        self.start_rpc_server()
+        # for only port change, we don't need to check if the port is in use
+        if ipaddr != self.addrport_model.endpoint_ipaddr and port == self.addrport_model.endpoint_port:
+            self.stop_rpc_server()
+            self.addrport_model.update_server(ipaddr, port)
+            logger.log_action(f"Updated RPC server to {self.addrport_model.endpoint_ipaddr}:{self.addrport_model.endpoint_port}")
+            self.start_rpc_server()
+        else:
+            if self.addrport_model.is_port_in_use(ipaddr, port):
+                logger.log_error(f"Port {port} is already in use on {ipaddr}")
+            else:
+                self.stop_rpc_server()
+                self.addrport_model.update_server(ipaddr, port)
+                logger.log_action(f"Updated RPC server to {self.addrport_model.endpoint_ipaddr}:{self.addrport_model.endpoint_port}")
+                self.start_rpc_server()
         return True
 
     def start_rpc_server(self):
@@ -170,7 +180,7 @@ class ManagementController:
             if self.addrport_model.is_port_in_use(self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port):
                 logger.log_error(f"Port {self.addrport_model.endpoint_port} is already in use on {self.addrport_model.endpoint_ipaddr}")
                 return
-            self.rpc_server = rpcserver.RPCServer(self, self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port)
+            self.rpc_server = RPCServer(self, self.addrport_model.endpoint_ipaddr, self.addrport_model.endpoint_port)
             self.rpc_server_thread = threading.Thread(target=self.rpc_server.start, daemon=True)
             self.rpc_server_thread.start()
 

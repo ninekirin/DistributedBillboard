@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from controllers.management_controller import ManagementController
 from controllers.display_controller import DisplayController
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     management_controller = ManagementController(root, display_controller)
 
     # Start JSON-RPC server in a separate thread
-    management_controller.start_rpc_server()
+    threading.Thread(target=management_controller.start_rpc_server, daemon=True).start()
 
     root.bind("<Key>", lambda e: on_key_press(e, management_controller))
     
