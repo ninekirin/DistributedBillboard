@@ -48,9 +48,9 @@ class ImageModel:
     def download_image(self, url):
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
         if not os.path.exists(filename):
-            logger.log_action(f"Downloading image from \"{url}\" to {filename}")
+            logger.log_action(f"Downloading image from {url} to {filename}")
             urlretrieve(url, filename)
-            logger.log_action(f"Downloaded image from \"{url}\"")
+            logger.log_action(f"Downloaded image from {url}")
         else:
             logger.log_action(f"Image already exists: {url}")
             return None

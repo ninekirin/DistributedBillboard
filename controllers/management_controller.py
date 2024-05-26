@@ -53,6 +53,9 @@ class ManagementController:
         if self.management_view.management_win.winfo_exists():
             self.management_view.update_image_listbox()
         if filepath:
+            if distribution:
+                # self.distribute_image(filepath)
+                threading.Thread(target=self.distribute_image, args=(filepath,), daemon=True).start()
             return filepath
         return None
 
@@ -72,7 +75,6 @@ class ManagementController:
                 local_url = f"{url_prefix}{file_path}"
                 filename = self.add_image(local_url)
                 if filename:
-                    # self.distribute_image(filename)
                     threading.Thread(target=self.distribute_image, args=(filename,), daemon=True).start()
                     return filename
         return None
@@ -83,7 +85,6 @@ class ManagementController:
         if self.management_view.management_win.winfo_exists():
             self.management_view.update_image_listbox()
         if distribution:
-            # self.distribute_remove_image(url)
             threading.Thread(target=self.distribute_remove_image, args=(url,), daemon=True).start()
 
     def add_node(self, node_url):
@@ -112,10 +113,11 @@ class ManagementController:
         for peer in [node for node in nodes if node['uuid'] != self.node_model.uuid]:
             try:
                 if peer['pong']:
+                    logger.log_action(f"Distributing image {filename} to {peer['node']}")
                     node = Server(peer['node'])
                     with open(filename, "rb") as f:
                         base64data = base64.b64encode(f.read()).decode('utf-8')
-                    node.add_image_base64(os.path.basename(filename), base64data, True)
+                    node.add_image_base64(os.path.basename(filename), base64data, False)
                     logger.log_action(f"Distributed image {filename} to {peer['node']}")
             except Exception as e:
                 logger.log_error(f"Error distributing to {peer}: {e}")
@@ -126,7 +128,7 @@ class ManagementController:
             try:
                 if peer['pong']:
                     node = Server(peer['node'])
-                    node.remove_image(url, True)
+                    node.remove_image(url, False)
                     logger.log_action(f"Distributed remove image {url} to {peer['node']}")
             except Exception as e:
                 logger.log_error(f"Error distributing remove to {peer}: {e}")

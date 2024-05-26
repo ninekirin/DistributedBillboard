@@ -365,9 +365,17 @@ class ManagementView:
 
     def save_settings(self):
         # Validate input (ping_interval and ping_timeout must be greater than 0)
-        if int(self.ping_interval_entry.get()) <= 0 or int(self.ping_timeout_entry.get()) <= 0 or int(self.img_switch_interval_entry.get()) <= 0:
-            messagebox.showerror("Invalid Input", "Values must be greater than 0.")
+        if not self.ping_interval_entry.get().isdigit() or int(self.ping_interval_entry.get()) <= 0:
+            messagebox.showerror("Invalid Input", "Ping Interval must be a positive integer.")
             self.ping_interval_entry.focus_set()
+            return
+        if not self.ping_timeout_entry.get().isdigit() or int(self.ping_timeout_entry.get()) <= 0:
+            messagebox.showerror("Invalid Input", "Ping Timeout must be a positive integer.")
+            self.ping_timeout_entry.focus_set()
+            return
+        if not self.img_switch_interval_entry.get().isdigit() or int(self.img_switch_interval_entry.get()) <= 0:
+            messagebox.showerror("Invalid Input", "Image Switch Interval must be a positive integer.")
+            self.img_switch_interval_entry.focus_set()
             return
         settings = {
             'fullscreen': self.fullscreen_var.get(),
