@@ -51,7 +51,8 @@ class ManagementController:
     
     def add_image_base64(self, filename, base64data):
         filepath = self.image_model.add_image_base64(filename, base64data)
-        self.management_view.image_listbox_add_item(filepath)
+        # self.management_view.image_listbox_add_item(filepath)
+        self.management_view.update_image_listbox()
         return filepath
 
     def upload_image(self, url):
@@ -68,10 +69,11 @@ class ManagementController:
                     url_prefix = "file:///"
                 local_url = f"{url_prefix}{file_path}"
                 filename = self.add_image(local_url)
-                self.distribute_image(filename)
-                return filename
+                if filename:
+                    self.distribute_image(filename)
+                    return filename
         return None
-
+    
     def remove_image(self, url, distribution=True):
         self.image_model.remove_image(url)
         # Remove image from image_listbox in management_view (if exists)
@@ -102,6 +104,9 @@ class ManagementController:
                 nodes_status.append(future.result())
 
         return nodes_status
+    
+    def get_images(self):
+        return self.image_model.get_images()
 
     def ping(self, node_url):
         try:

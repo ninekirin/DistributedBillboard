@@ -29,5 +29,8 @@ if __name__ == "__main__":
 
     # Listen for 'm' key press to toggle management mode
     root.bind("<Key>", lambda e: management_controller.toggle() if e.char == 'm' or e.char == 'M' else None)
+
+    # Listen for 'q' key press to quit
+    root.bind("<Key>", lambda e: root.quit() if e.char == 'q' or e.char == 'Q' else None)
     
     root.mainloop()

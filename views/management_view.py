@@ -177,6 +177,8 @@ class ManagementView:
             self.controller.add_node(node_url)
             self.update_node_listbox()
             self.node_entry.delete(0, tk.END)
+        else:
+            tk.messagebox.showerror("Invalid URL", "Invalid URL format.\nPlease enter a valid URL.\nExample: http://127.0.0.1:6000")
 
     def remove_node(self):
         selected = self.node_listbox.curselection()
@@ -190,8 +192,11 @@ class ManagementView:
         url = self.image_entry.get()
         filename = self.controller.upload_image(url)
         if filename:
-            self.image_listbox.insert(tk.END, filename)
+            # self.image_listbox.insert(tk.END, filename)
             self.image_entry.delete(0, tk.END)
+            self.update_image_listbox()
+        else:
+            tk.messagebox.showerror("Failed to Upload Image", "Failed to Upload Image.\nPlease check the logs for more information.")
 
     def remove_image(self):
         selected = self.image_listbox.curselection()
@@ -218,6 +223,15 @@ class ManagementView:
             self.upload_img_button.config(text="Download Image From Remote")
         else:
             self.upload_img_button.config(text="Select Image From Filesystem")
+
+    def update_image_listbox(self):
+        selected = self.image_listbox.curselection()
+        images = self.controller.image_model.get_images()
+        self.image_listbox.delete(0, tk.END)
+        for image in images:
+            self.image_listbox.insert(tk.END, image)
+        if selected:
+            self.image_listbox.selection_set(selected)
 
     def update_node_listbox(self):
         # get selected index

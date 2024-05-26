@@ -32,12 +32,18 @@ class ImageModel:
                 logger.log_action(f"Removed invalid image {path}")
 
         # Sort images by modification time
-        path_list.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_cache_dir, x)))
+        # path_list.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_cache_dir, x)))
+
+        # Sort images by name
+        # path_list.sort()
 
         # Load images from cache
         for filename in path_list:
             if filename.lower().endswith(extentions):
                 self.image_list.append(os.path.join(self.image_cache_dir, filename))
+
+        # Sort images by name
+        self.image_list.sort()
 
     def download_image(self, url):
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
@@ -45,6 +51,9 @@ class ImageModel:
             logger.log_action(f"Downloading image from \"{url}\" to {filename}")
             urlretrieve(url, filename)
             logger.log_action(f"Downloaded image from \"{url}\"")
+        else:
+            logger.log_action(f"Image already exists: {url}")
+            return None
         # validate image
         try:
             Image.open(filename).verify()
@@ -55,10 +64,25 @@ class ImageModel:
 
     def add_image(self, url):
         filename = self.download_image(url)
-        self.image_list.append(filename)
-        logger.log_action(f"Added image {url}")
-        return filename
-
+        if filename:
+            self.image_list.append(filename)
+            self.image_list.sort()
+            logger.log_action(f"Added image {url}")
+            return filename
+        return None
+    
+    def add_image_base64(self, filename, base64data):
+        data = base64.b64decode(base64data)
+        filepath = os.path.join(self.image_cache_dir, filename)
+        if not os.path.exists(filepath):
+            with open(filepath, "wb") as f:
+                f.write(data)
+            self.image_list.append(filepath)
+            self.image_list.sort()
+            logger.log_action(f"Added image {filename}")
+            return filepath
+        return None
+    
     def remove_image(self, url):
         filename = os.path.join(self.image_cache_dir, os.path.basename(url))
         if filename in self.image_list:
@@ -77,12 +101,3 @@ class ImageModel:
         image_path = self.image_list[self.current_image_index]
         self.current_image_index = (self.current_image_index + 1) % len(self.image_list)
         return image_path
-
-    def add_image_base64(self, filename, base64data):
-        data = base64.b64decode(base64data)
-        filepath = os.path.join(self.image_cache_dir, filename)
-        with open(filepath, "wb") as f:
-            f.write(data)
-        self.image_list.append(filepath)
-        logger.log_action(f"Added base64 image {filename}")
-        return filepath

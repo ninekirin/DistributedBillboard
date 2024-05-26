@@ -37,7 +37,7 @@ In the main window, you can see the current image. You can switch to the next im
 
 To switch between the fullscreen and windowed mode, press `F11`. Press `ESC` to exit the fullscreen mode.
 
-In the billboard window, press `m` to open the management window. Press `m` again to close the menu.
+In the billboard window, press `m` to open the management window. Press `m` again to close the menu. You can also press `q` to exit the application.
 
 In the management window, you can see the list of nodes and their status, where you can add a new node, remove a node, update the image, change the interface address and port of the current node, and edit other settings in the "Other" tab. Press `ESC` to close the management window.
 

@@ -15,8 +15,12 @@ class DisplayController:
         # Pack label to fill the window
         self.label.pack(fill=tk.BOTH, expand=True)
 
-        # Set label background color
-        self.label.configure(background=background_color)
+        try:
+            # Set label background color
+            self.label.configure(background=background_color)
+        except:
+            logger.log_error(f"Invalid background color: {background_color}")
+            self.label.configure(background='black')
 
         self.image_model = ImageModel()
         self.image_switch_interval = image_switch_interval
@@ -33,7 +37,13 @@ class DisplayController:
         self.root.bind('<Button-1>', lambda e: self.display_image(self.image_model.get_next_image()))
 
     def set_background_color(self, color):
-        self.label.configure(background=color)
+        try:
+            self.label.configure(background=color)
+            return True
+        except:
+            logger.log_error(f"Invalid background color: {color}")
+            tk.messagebox.showerror("Error", f"Invalid background color: {color}")
+            return False
 
     def set_image_switch_interval(self, interval):
         self.image_switch_interval = interval
